@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>EMS Checker</title>
+<meta name="theme-color" content="#E8151B"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="EMS Checker"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--red:#E8151B;--red2:#b01015;--navy:#0a0f1e;--navy2:#111827;--navy3:#1c2637;--bdr:#243044;--card:#141e2e;--card2:#1e2d42;--txt:#e8edf3;--gray:#8896a5;--gray2:#c5cdd8;--green:#22c55e;--amber:#f59e0b;--danger:#ef4444;--blue:#3b82f6;}
+body.light{--navy:#f0f4f8;--navy2:#e2e8f0;--navy3:#dde4ed;--bdr:#cbd5e1;--card:#fff;--card2:#e2e8f0;--txt:#0f172a;--gray:#64748b;--gray2:#475569;}
+body.light .bar{background:rgba(255,255,255,.97);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Barlow',sans-serif;background:var(--navy);color:var(--txt);min-height:100vh;}
+.bg{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(232,21,27,.08) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 90%,rgba(232,21,27,.05) 0%,transparent 50%);}
+#app{position:relative;z-index:1;}
+.pg{display:none;min-height:100vh;flex-direction:column;}
+.pg.on{display:flex;}
+/* LOADING */
+#ld{position:fixed;inset:0;background:var(--navy);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;}
+.spin{width:48px;height:48px;border:3px solid var(--bdr);border-top-color:var(--red);border-radius:50%;animation:sp .8s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:.9}}
+/* TOPBAR */
+.bar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:60px;background:rgba(10,15,30,.97);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:100;backdrop-filter:blur(10px);}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.logo:hover .lname{color:var(--red);}
+.lic{width:34px;height:34px;background:var(--red);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.lname{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;transition:color .2s;}
+.lsub{font-size:10px;color:var(--gray);}
+.tr{display:flex;align-items:center;gap:8px;}
+.ub{display:flex;align-items:center;gap:8px;background:var(--navy3);border:1px solid var(--bdr);padding:5px 10px;border-radius:8px;}
+.uav{width:26px;height:26px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.unm{font-size:13px;font-weight:600;}
+.url{font-size:10px;color:var(--gray);text-transform:uppercase;}
+.tbtn{background:transparent;border:1px solid var(--bdr);color:var(--gray);padding:6px 11px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s;}
+.tbtn:hover{border-color:var(--red);color:var(--red);}
+.tbtn.x:hover{border-color:var(--danger);color:var(--danger);}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:inherit;}
+.pr{background:var(--red);color:#fff;box-shadow:0 4px 16px rgba(232,21,27,.3);}
+.pr:hover{background:#ff3a40;transform:translateY(-1px);}
+.sc{background:var(--navy3);color:var(--txt);border:1px solid var(--bdr);}
+.sc:hover{border-color:var(--red);color:var(--red);}
+.su{background:var(--green);color:#fff;}
+.su:hover{background:#16a34a;}
+.dn{background:transparent;border:1px solid rgba(239,68,68,.4);color:var(--danger);}
+.dn:hover{background:rgba(239,68,68,.1);}
+.lg{padding:14px 28px;font-size:15px;border-radius:10px;}
+.sm{padding:7px 14px;font-size:12px;border-radius:6px;}
+/* FORMS */
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray);}
+.fc{background:var(--navy3);border:1px solid var(--bdr);color:var(--txt);padding:11px 14px;border-radius:8px;font-size:14px;font-family:inherit;outline:none;width:100%;transition:border .2s;}
+.fc:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,21,27,.12);}
+.fc::placeholder{color:var(--gray);}
+select.fc option{background:var(--navy2);color:var(--txt);}
+/* ALERTS */
+.al{padding:11px 14px;border-radius:8px;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.al-e{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5;}
+.al-s{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#86efac;}
+.al-i{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:#93c5fd;}
+/* BADGES */
+.bd{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+.bd-r{background:rgba(232,21,27,.2);color:#fca5a5;border:1px solid rgba(232,21,27,.3);}
+.bd-g{background:rgba(34,197,94,.2);color:#86efac;border:1px solid rgba(34,197,94,.3);}
+.bd-a{background:rgba(245,158,11,.2);color:#fde68a;border:1px solid rgba(245,158,11,.3);}
+.bd-gr{background:rgba(136,150,165,.2);color:var(--gray2);border:1px solid rgba(136,150,165,.3);}
+.bd-b{background:rgba(59,130,246,.2);color:#93c5fd;border:1px solid rgba(59,130,246,.3);}
+/* LAYOUT */
+.mc{flex:1;padding:22px;max-width:1100px;margin:0 auto;width:100%;}
+.ph{margin-bottom:24px;}
+.ph h1{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:2px;}
+.ph p{color:var(--gray);font-size:14px;margin-top:3px;}
+.card{background:var(--card);border:1px solid var(--card2);border-radius:12px;padding:22px;}
+/* LOGIN */
+#pg-login{align-items:center;justify-content:center;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(232,21,27,.12) 0%,transparent 60%),var(--navy);}
+.lbox{width:100%;max-width:410px;padding:20px;}
+.llogo{text-align:center;margin-bottom:36px;}
+.lemb{width:78px;height:78px;margin:0 auto 14px;background:linear-gradient(135deg,var(--red),var(--red2));border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 8px 32px rgba(232,21,27,.4);animation:glow 3s ease-in-out infinite;}
+@keyframes glow{0%,100%{box-shadow:0 8px 32px rgba(232,21,27,.4)}50%{box-shadow:0 8px 48px rgba(232,21,27,.65)}}
+.ltit{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;}
+.lsub2{font-size:13px;color:var(--gray);margin-top:3px;}
+.lcard{background:var(--card);border:1px solid var(--card2);border-radius:14px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.lform{display:flex;flex-direction:column;gap:14px;}
+/* DASHBOARD */
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px;}
+.sc2{background:var(--card);border:1px solid var(--card2);border-radius:12px;padding:18px;}
+.si{font-size:26px;margin-bottom:7px;}
+.sv{font-family:'Bebas Neue',sans-serif;font-size:38px;line-height:1;color:var(--red);}
+.sl{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-top:3px;}
+.ag{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;}
+.ac{background:var(--card);border:1px solid var(--card2);border-radius:12px;padding:24px;cursor:pointer;transition:all .2s;position:relative;}
+.ac:hover{border-color:var(--red);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.3);}
+.aci{font-size:38px;margin-bottom:10px;}
+.act{font-size:17px;font-weight:700;margin-bottom:5px;}
+.acd{font-size:13px;color:var(--gray);}
+.acar{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:22px;color:var(--bdr);transition:color .2s;}
+.ac:hover .acar{color:var(--red);}
+/* SETUP */
+.sg2{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;}
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-top:10px;}
+.cb{background:var(--navy3);border:2px solid var(--bdr);color:var(--txt);padding:16px 8px;border-radius:10px;cursor:pointer;font-size:19px;font-weight:700;text-align:center;font-family:'Bebas Neue',sans-serif;transition:all .2s;}
+.cb:hover{border-color:var(--red);color:var(--red);}
+.cb.sel{border-color:var(--red);background:rgba(232,21,27,.15);color:var(--red);}
+/* CHECKLIST */
+.clh{background:var(--card);border:1px solid var(--card2);border-radius:12px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+.cm{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+.cmi{display:flex;flex-direction:column;gap:1px;}
+.cml{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;}
+.cmv{font-size:13px;font-weight:700;}
+.pbw{width:100%;background:var(--bdr);border-radius:4px;height:5px;margin-bottom:14px;}
+.pb{height:100%;border-radius:4px;background:var(--red);transition:width .4s;}
+.cats{margin-bottom:18px;}
+.catt{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--gray);padding:7px 0;border-bottom:1px solid var(--bdr);margin-bottom:8px;display:flex;align-items:center;gap:7px;}
+.catt::before{content:'';width:18px;height:2px;background:var(--red);display:inline-block;}
+.mr{background:var(--card);border:1px solid var(--card2);border-radius:10px;padding:10px 14px;margin-bottom:5px;display:flex;align-items:center;gap:10px;transition:all .2s;}
+.mr.miss{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.05);}
+.mr.ok{border-color:rgba(34,197,94,.25);}
+.mr.vf{border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.04);}
+.mn{flex:1;font-size:13px;font-weight:600;}
+.mq{text-align:center;min-width:56px;}
+.mql{font-size:10px;color:var(--gray);}
+.mqv{font-size:14px;font-weight:700;}
+.qc{display:flex;align-items:center;gap:5px;}
+.qb{width:30px;height:30px;border-radius:7px;border:1px solid var(--bdr);background:var(--navy3);color:var(--txt);cursor:pointer;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.qb:hover{border-color:var(--red);color:var(--red);}
+.qd{min-width:30px;text-align:center;font-size:17px;font-weight:700;}
+.qd.u{color:var(--danger);}
+.qd.ok{color:var(--green);}
+.ms{min-width:22px;text-align:center;font-size:17px;}
+.mck{display:flex;align-items:center;gap:5px;cursor:pointer;min-width:65px;}
+.mck input{width:17px;height:17px;cursor:pointer;accent-color:var(--green);}
+.mck span{font-size:11px;color:var(--gray);}
+/* RESOLUTION */
+.mi{background:var(--card);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:16px;margin-bottom:10px;transition:all .3s;}
+.mi.rr{border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.04);}
+.mi.rm{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.04);}
+.mih{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.sbg{font-size:12px;font-weight:700;color:var(--danger);background:rgba(239,68,68,.15);padding:3px 9px;border-radius:6px;}
+.rb{display:flex;gap:9px;}
+.rbn{flex:1;padding:9px 11px;border-radius:8px;border:2px solid transparent;cursor:pointer;font-size:13px;font-weight:600;text-align:center;font-family:inherit;transition:all .2s;}
+.rb-r{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:var(--green);}
+.rb-r:hover,.rb-r.on{background:rgba(34,197,94,.2);border-color:var(--green);}
+.rb-m{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3);color:var(--amber);}
+.rb-m:hover,.rb-m.on{background:rgba(245,158,11,.2);border-color:var(--amber);}
+/* MISSING STATUS */
+.sit{background:var(--card);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:16px;margin-bottom:10px;transition:all .3s;}
+.sit.dp{border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.04);}
+.sit.na{border-color:rgba(136,150,165,.4);background:rgba(136,150,165,.04);}
+.sit.uv{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.04);}
+.sith{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.sbt{display:flex;gap:8px;flex-wrap:wrap;}
+.sbn{flex:1;min-width:100px;padding:9px 10px;border-radius:8px;border:2px solid transparent;cursor:pointer;font-size:12px;font-weight:600;text-align:center;font-family:inherit;transition:all .2s;}
+.sb-d{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.3);color:#93c5fd;}
+.sb-d:hover,.sb-d.on{background:rgba(59,130,246,.2);border-color:var(--blue);}
+.sb-n{background:rgba(136,150,165,.1);border-color:rgba(136,150,165,.3);color:var(--gray2);}
+.sb-n:hover,.sb-n.on{background:rgba(136,150,165,.2);border-color:var(--gray2);}
+.sb-u{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#fca5a5;}
+.sb-u:hover,.sb-u.on{background:rgba(239,68,68,.2);border-color:var(--danger);}
+/* REPORT */
+.rw{max-width:840px;margin:0 auto;}
+.rh{background:linear-gradient(135deg,#b01015,#7a0a0d);border-radius:14px;padding:26px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;}
+.rtm{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:3px;line-height:1;}
+.rts{font-size:13px;opacity:.8;margin-top:3px;}
+.rcb{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:10px 18px;text-align:center;}
+.rcn{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;}
+.rcl{font-size:10px;opacity:.7;letter-spacing:2px;}
+.rmg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px;}
+.rmi{background:var(--card);border:1px solid var(--card2);border-radius:9px;padding:12px 14px;}
+.rmk{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.rmv{font-size:14px;font-weight:700;}
+.srow{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.sb2{flex:1;min-width:100px;padding:14px;border-radius:10px;text-align:center;}
+.st{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);}
+.sk{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);}
+.sr{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);}
+.sm2{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);}
+.sn{font-family:'Bebas Neue',sans-serif;font-size:38px;line-height:1;}
+.slb{font-size:11px;margin-top:3px;opacity:.8;}
+.rs{margin-bottom:18px;}
+.rst{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--gray);margin-bottom:9px;display:flex;align-items:center;gap:7px;}
+.ri{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border-radius:8px;margin-bottom:5px;background:var(--card);border:1px solid var(--card2);}
+.rin{font-size:13px;font-weight:500;}
+/* TABLES */
+.tw{overflow-x:auto;}
+table.dt{width:100%;border-collapse:collapse;}
+table.dt th,table.dt td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--bdr);font-size:13px;}
+table.dt th{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600;}
+table.dt tbody tr:hover td{background:var(--navy3);}
+.acts{display:flex;gap:7px;flex-wrap:wrap;}
+/* CAR TABS */
+.ctabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px;}
+.ctab{padding:7px 13px;border-radius:7px;border:1px solid var(--bdr);background:var(--navy3);color:var(--gray);cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;}
+.ctab:hover{border-color:var(--red);color:var(--red);}
+.ctab.on{background:var(--red);color:#fff;border-color:var(--red);}
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s;}
+.mo.open{opacity:1;pointer-events:all;}
+.mdl{background:var(--card);border:1px solid var(--card2);border-radius:14px;padding:24px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;transform:scale(.95);transition:transform .2s;}
+.mo.open .mdl{transform:scale(1);}
+.mtt{font-size:17px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:9px;}
+.mf{display:flex;flex-direction:column;gap:13px;}
+.ma{display:flex;gap:9px;margin-top:20px;justify-content:flex-end;}
+/* EMPTY */
+.empty{text-align:center;padding:50px 20px;}
+.ei{font-size:55px;margin-bottom:14px;opacity:.3;}
+.et{font-size:14px;color:var(--gray);}
+/* BANNERS */
+.bn{position:fixed;top:0;left:0;right:0;z-index:9998;text-align:center;padding:9px 14px;font-size:13px;font-weight:700;display:none;}
+@media print{body{background:#fff!important;color:#000!important;}.bar,.btn,.no-print{display:none!important;}.rh{background:#cc1015!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+@media(max-width:620px){.bar{padding:0 12px;}.mc{padding:14px;}.mr{flex-wrap:wrap;}.rb,.sbt{flex-direction:column;}.sg2{grid-template-columns:1fr 1fr;}.tr{gap:4px;}}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div id="ld"><div class="spin"></div><div style="font-size:14px;color:var(--gray)">Connecting...</div></div>
+<div class="bn" id="bn-off" style="background:var(--amber);color:#0a0f1e">No internet — checks saved locally, will sync when back online</div>
+<div class="bn" id="bn-syn" style="background:var(--green);color:#0a0f1e">Back online — syncing saved checks...</div>
+<div id="app">
+
+<!-- ══ LOGIN ══ -->
+<div class="pg on" id="pg-login">
+  <div class="lbox">
+    <div class="llogo">
+      <div class="lemb">🚑</div>
+      <div class="ltit">EMS CHECKER</div>
+      <div class="lsub2">Ambulance Equipment Verification System</div>
+    </div>
+    <div class="lcard">
+      <div id="al-login"></div>
+      <div class="lform">
+        <div class="fg"><label class="fl">Email</label><input type="email" id="em" class="fc" placeholder="you@ems.com"/></div>
+        <div class="fg"><label class="fl">Password</label><input type="password" id="pw" class="fc" placeholder="password" onkeydown="if(event.key==='Enter')signIn()"/></div>
+        <button class="btn pr lg" onclick="signIn()" style="width:100%">Sign In →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div class="pg" id="pg-dash">
+  <div class="bar">
+    <div class="logo" onclick="go('pg-dash')"><div class="lic">🚑</div><div><div class="lname">EMS CHECKER</div><div class="lsub">Ambulance Verification</div></div></div>
+    <div class="tr">
+      <button class="tbtn" id="th-btn" onclick="toggleTheme()">🌙</button>
+      <div class="ub"><div class="uav" id="u-av">?</div><div><div class="unm" id="u-nm">—</div><div class="url" id="u-rl">—</div></div></div>
+      <button class="tbtn" onclick="openMo('mo-pw')">🔑</button>
+      <button class="tbtn x" onclick="signOut()">Logout</button>
+    </div>
+  </div>
+  <div class="mc">
+    <div class="ph"><h1>DASHBOARD</h1><p>Welcome back.</p></div>
+    <div class="sg">
+      <div class="sc2"><div class="si">📋</div><div class="sv" id="st-tot">—</div><div class="sl">Total Checks</div></div>
+      <div class="sc2"><div class="si">🗓️</div><div class="sv" id="st-tod">—</div><div class="sl">Today</div></div>
+      <div class="sc2" id="miss-card">
+        <div class="si">⚠️</div><div class="sv" id="st-mis">—</div><div class="sl">Still Missing</div>
+        <button id="dl-btn" onclick="dlMissingPDF()" style="display:none;margin-top:9px;width:100%;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.35);color:#93c5fd;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">⬇ Missing Report</button>
+        <button id="cl-btn" onclick="clearMissing()" style="display:none;margin-top:5px;width:100%;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);color:#fca5a5;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">🗑 Clear Counter</button>
+      </div>
+      <div class="sc2" id="off-card" style="display:none;border-color:rgba(245,158,11,.4)">
+        <div class="si">📵</div><div class="sv" id="st-off" style="color:var(--amber)">0</div><div class="sl">Offline Queue</div>
+        <button onclick="syncOffline()" style="margin-top:9px;width:100%;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.35);color:#fde68a;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">🔄 Sync</button>
+      </div>
+    </div>
+    <div class="ag">
+      <div class="ac" onclick="go('pg-setup')"><div class="aci">✅</div><div class="act">New Check</div><div class="acd">Start a new equipment verification</div><div class="acar">›</div></div>
+      <div class="ac" onclick="goReports()"><div class="aci">📊</div><div class="act">Reports</div><div class="acd">View all shift reports</div><div class="acar">›</div></div>
+      <div class="ac" id="c-mats" onclick="goMats()" style="display:none"><div class="aci">⚙️</div><div class="act">Manage Materials</div><div class="acd">Per-car materials management</div><div class="acar">›</div></div>
+      <div class="ac" id="c-usrs" onclick="goUsers()" style="display:none"><div class="aci">👥</div><div class="act">Manage Users</div><div class="acd">Assign roles to team members</div><div class="acar">›</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SETUP ══ -->
+<div class="pg" id="pg-setup">
+  <div class="bar">
+    <div class="logo" onclick="go('pg-dash')"><div class="lic">🚑</div><div><div class="lname">EMS CHECKER</div></div></div>
+    <div class="tr"><button class="tbtn" onclick="go('pg-dash')">← Back</button></div>
+  </div>
+  <div class="mc">
+    <div class="ph"><h1>NEW CHECK</h1><p>Fill shift details and select ambulance.</p></div>
+    <div class="card" style="margin-bottom:18px">
+      <div style="font-weight:700;font-size:15px;margin-bottom:3px">Shift Details</div>
+      <div style="font-size:13px;color:var(--gray);margin-bottom:18px">All fields required</div>
+      <div id="al-setup"></div>
+      <div class="sg2">
+        <div class="fg"><label class="fl">Date</label><input type="date" id="s-dt" class="fc" onchange="onDateChg()"/></div>
+        <div class="fg"><label class="fl">Start Time</label><input type="time" id="s-st" class="fc"/></div>
+        <div class="fg"><label class="fl">Shift</label>
+          <select id="s-sh" class="fc"><option value="">-- Select --</option><option value="morning">Morning Shift</option><option value="night">Night Shift</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <div style="font-weight:700;font-size:15px;margin-bottom:10px">Select Ambulance</div>
+      <div class="cg" id="car-grid"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn sc sm" onclick="go('pg-dash')">Cancel</button>
+      <button class="btn pr lg" onclick="startCheck()">Start Check →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CHECKLIST ══ -->
+<div class="pg" id="pg-check">
+  <div class="bar">
+    <div class="logo" onclick="go('pg-dash')"><div class="lic">🚑</div><div><div class="lname">EMS CHECKER</div></div></div>
+    <div class="tr"><span style="font-size:13px;color:var(--gray)" id="cl-prog">0/0</span></div>
+  </div>
+  <div class="mc">
+    <div class="clh">
+      <div class="cm">
+        <div class="cmi"><div class="cml">Car</div><div class="cmv" id="cl-car">—</div></div>
+        <div class="cmi"><div class="cml">Date</div><div class="cmv" id="cl-dt">—</div></div>
+        <div class="cmi"><div class="cml">Start</div><div class="cmv" id="cl-st">—</div></div>
+        <div class="cmi"><div class="cml">Shift</div><div class="cmv" id="cl-sh">—</div></div>
+        <div class="cmi"><div class="cml">Checker</div><div class="cmv" id="cl-ch">—</div></div>
+      </div>
+      <button class="btn pr sm" onclick="finishCheck()">Finish →</button>
+    </div>
+    <div id="al-cl" style="margin-bottom:9px"></div>
+    <div class="pbw"><div class="pb" id="cl-bar" style="width:0%"></div></div>
+    <div id="cl-body"></div>
+  </div>
+</div>
+
+<!-- ══ RESOLUTION ══ -->
+<div class="pg" id="pg-res">
+  <div class="bar"><div class="logo" onclick="go('pg-dash')"><div class="lic">🚑</div><div><div class="lname">EMS CHECKER</div></div></div></div>
+  <div class="mc">
+    <div class="ph"><h1>MISSING ITEMS</h1><p>Mark each item as replaced or still missing.</p></div>
+    <div id="al-res"></div><div id="res-body"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:18px"><button class="btn pr lg" onclick="genReport()">Generate Report →</button></div>
+  </div>
+</div>
+
+<!-- ══ MISSING STATUS ══ -->
+<div class="pg" id="pg-status">
+  <div class="bar">
+    <div class="logo" onclick="go('pg-dash')"><div class="lic">🚑</div><div><div class="lname">EMS CHECKER</div></div></div>
+    <div class="tr"><button class="tbtn" onclick="go('pg-res')">← Back</button></div>
+  </div>
+  <div class="mc">
+    <div class="ph"><h1>STILL MISSING</h1><p>Select a reason for each missing item.</p></div>
+    <div id="al-stat"></div><div id="stat-body"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:18px"><button class="btn pr lg" onclick="confirmStatus()">Confirm & Generate →</button></div>
+  </div>
+</div>
+
+<!-- ══ REPORT ══ -->
+<div class="pg" id="pg-report">
+  <div class="bar no-print">
+    <div class="logo" onclick="go('pg-dash')"><div class="lic">🚑</div><div><div class="lname">EMS CHECKER</div></div></div>
+    <div class="tr">
+      <button class="tbtn" onclick="window.print()">🖨 Print</button>
+      <button class="btn pr sm" onclick="dlPDF()">⬇ PDF</button>
+      <button class="tbtn" onclick="go('pg-dash')">Dashboard</button>
+    </div>
+  </div>
+  <div class="mc"><div class="rw" id="rpt-out"></div></div>
+</div>
+
+<!-- ══ REPORTS LIST ══ -->
+<div class="pg" id="pg-reports">
+  <div class="bar">
+    <div class="logo" onclick="go('pg-dash')"><div class="lic">🚑</div><div><div class="lname">EMS CHECKER</div></div></div>
+    <div class="tr"><button class="tbtn" onclick="go('pg-dash')">← Back</button></div>
+  </div>
+  <div class="mc">
+    <div class="ph"><h1>REPORTS</h1><p>All completed shift reports.</p></div>
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end">
+        <div class="fg"><label class="fl">Checker</label><input type="text" id="rf-ch" class="fc" placeholder="Search..." oninput="filterRpts()"/></div>
+        <div class="fg"><label class="fl">Car</label>
+          <select id="rf-car" class="fc" onchange="filterRpts()">
+            <option value="">All Cars</option>
+            <option>525</option><option>570</option><option>571</option><option>572</option>
+            <option>573</option><option>574</option><option>575</option><option>950</option><option>951</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Shift</label>
+          <select id="rf-sh" class="fc" onchange="filterRpts()">
+            <option value="">All</option><option value="morning">Morning</option><option value="night">Night</option>
+          </select>
+        </div>
+        <button class="btn sc sm" onclick="clearFilters()" style="height:44px">Clear</button>
+      </div>
+    </div>
+    <div class="card"><div id="rpts-body"><div class="empty"><div class="ei">📭</div><div class="et">No reports yet</div></div></div></div>
+  </div>
+</div>
+
+<!-- ══ MATERIALS ══ -->
+<div class="pg" id="pg-mats">
+  <div class="bar">
+    <div class="logo" onclick="go('pg-dash')"><div class="lic">🚑</div><div><div class="lname">EMS CHECKER</div></div></div>
+    <div class="tr">
+      <button class="btn pr sm" onclick="openMatMo()">+ Add</button>
+      <button class="tbtn" onclick="go('pg-dash')">← Back</button>
+    </div>
+  </div>
+  <div class="mc">
+    <div class="ph"><h1>MANAGE MATERIALS</h1><p>Admin & Supervisor. Select a car tab to filter.</p></div>
+    <div class="card" style="margin-bottom:14px">
+      <div style="font-size:12px;color:var(--gray);margin-bottom:10px">Filter by car (or view all):</div>
+      <div class="ctabs" id="mat-tabs"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+        <input type="text" class="fc" id="mat-srch" placeholder="Search materials..." oninput="renderMats()" style="max-width:270px"/>
+        <span id="mat-lbl" style="font-size:12px;color:var(--gray)"></span>
+      </div>
+      <div class="tw"><table class="dt"><thead><tr><th>Name</th><th>Category</th><th>Qty</th><th>Cars</th><th>Status</th><th>Actions</th></tr></thead><tbody id="mats-tb"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ USERS ══ -->
+<div class="pg" id="pg-users">
+  <div class="bar">
+    <div class="logo" onclick="go('pg-dash')"><div class="lic">🚑</div><div><div class="lname">EMS CHECKER</div></div></div>
+    <div class="tr"><button class="tbtn" onclick="go('pg-dash')">← Back</button></div>
+  </div>
+  <div class="mc">
+    <div class="ph"><h1>MANAGE USERS</h1><p>Admin access only.</p></div>
+    <div class="card"><div class="tw"><table class="dt"><thead><tr><th>Name</th><th>Role</th><th>Change Role</th></tr></thead><tbody id="users-tb"></tbody></table></div></div>
+  </div>
+</div>
+
+</div><!-- end app -->
+
+<!-- MODALS -->
+<div class="mo" id="mo-pw">
+  <div class="mdl">
+    <div class="mtt">🔑 Change Password</div>
+    <div id="al-pw"></div>
+    <div class="mf">
+      <div class="fg"><label class="fl">New Password</label><input type="password" id="pw-new" class="fc" placeholder="min 6 characters"/></div>
+      <div class="fg"><label class="fl">Confirm</label><input type="password" id="pw-cf" class="fc" placeholder="repeat password"/></div>
+    </div>
+    <div class="ma"><button class="btn sc sm" onclick="closeMo('mo-pw')">Cancel</button><button class="btn pr sm" onclick="changePw()">Update</button></div>
+  </div>
+</div>
+
+<div class="mo" id="mo-mat">
+  <div class="mdl">
+    <div class="mtt">📦 <span id="mo-mat-t">Add Material</span></div>
+    <input type="hidden" id="mat-id"/>
+    <div class="mf">
+      <div class="fg"><label class="fl">Name</label><input type="text" id="mat-nm" class="fc" placeholder="e.g. Surgical Gloves"/></div>
+      <div class="fg"><label class="fl">Category</label><input type="text" id="mat-ct" class="fc" placeholder="e.g. PPE, Airway"/></div>
+      <div class="fg"><label class="fl">Required Quantity</label><input type="number" id="mat-qt" class="fc" min="1" value="1"/></div>
+      <div class="fg">
+        <label class="fl">Assign to Cars</label>
+        <div style="background:var(--navy3);border:1px solid var(--bdr);border-radius:10px;padding:12px">
+          <div id="lbl-all" onclick="toggleAllCars()" style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:9px 11px;border-radius:8px;border:2px solid var(--green);background:rgba(34,197,94,.1);margin-bottom:10px">
+            <div id="ic-all" style="width:20px;height:20px;border-radius:5px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex-shrink:0">✓</div>
+            <div><div style="font-size:13px;font-weight:700;color:var(--green)">All Cars (Shared)</div><div style="font-size:11px;color:var(--gray)">Appears in every ambulance checklist</div></div>
+          </div>
+          <div style="font-size:11px;color:var(--gray);text-align:center;margin-bottom:8px;font-weight:600">— OR SELECT SPECIFIC CARS —</div>
+          <div id="car-cbs" style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px"></div>
+        </div>
+        <div id="mat-sum" style="margin-top:7px;font-size:12px;font-weight:600;color:var(--green)">✅ Shared — all cars</div>
+      </div>
+    </div>
+    <div class="ma"><button class="btn sc sm" onclick="closeMo('mo-mat')">Cancel</button><button class="btn pr sm" onclick="saveMat()">Save</button></div>
+  </div>
+</div>
+
+<script>
+const SB_URL='https://wioltrewydxkuxgnzibr.supabase.co';
+const SB_KEY='sb_publishable_RJZ7PBFl7LOjKQ-yg006cg_K-QNww8i';
+const CARS=['525','570','571','572','573','574','575','950','951'];
+
+let SB=null, USER=null, PROF=null;
+let CUR_CHECK=null, CUR_ITEMS=[], MATS=[], ALL_RPTS=[], SEL_CAR=null, ACT_TAB='all';
+
+// ── ROLE HELPERS ──
+const isAdmin=()=>PROF&&(PROF.role==='admin'||PROF.role==='owner');
+const isSup=()=>PROF&&PROF.role==='supervisor';
+const isAS=()=>isAdmin()||isSup();
+const rlabel=r=>(r==='admin'||r==='owner')?'Admin':r==='supervisor'?'Supervisor':'Paramedic';
+const rcolor=r=>(r==='admin'||r==='owner')?'bd-r':r==='supervisor'?'bd-b':'bd-g';
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded',()=>{
+  // Set defaults immediately
+  document.getElementById('s-dt').value=new Date().toISOString().split('T')[0];
+  onDateChg();
+  CARS.forEach(c=>{
+    const d=document.createElement('div');
+    d.className='cb';d.textContent=c;
+    d.onclick=()=>{document.querySelectorAll('.cb').forEach(b=>b.classList.remove('sel'));d.classList.add('sel');SEL_CAR=c;};
+    document.getElementById('car-grid').appendChild(d);
+  });
+  applyTheme();
+  buildCarCBs();
+
+  // Online/offline listeners
+  window.addEventListener('online',async()=>{
+    document.getElementById('bn-off').style.display='none';
+    document.getElementById('bn-syn').style.display='block';
+    document.getElementById('app').style.paddingTop='38px';
+    await syncOffline();
+    setTimeout(()=>{document.getElementById('bn-syn').style.display='none';document.getElementById('app').style.paddingTop='0';},3000);
+  });
+  window.addEventListener('offline',()=>{document.getElementById('bn-off').style.display='block';document.getElementById('app').style.paddingTop='38px';});
+  if(!navigator.onLine){document.getElementById('bn-off').style.display='block';document.getElementById('app').style.paddingTop='38px';}
+  updateOffCount();
+
+  // Init Supabase after a tiny delay (non-blocking)
+  setTimeout(initSB, 50);
+});
+
+async function initSB(){
+  try{
+    if(!window.supabase){
+      // Library not loaded yet, retry
+      setTimeout(initSB,200);
+      return;
+    }
+    SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+
+    // Check for existing session
+    const{data,error}=await Promise.race([
+      SB.auth.getSession(),
+      new Promise(r=>setTimeout(()=>r({data:{session:null},error:null}),5000))
+    ]);
+
+    if(!error&&data.session){
+      show();
+      USER=data.session.user;
+      await loadProf();
+      hide();go('pg-dash');loadStats();
+    }
+    // else: stay on login (already showing)
+
+    // Listen for auth changes
+    SB.auth.onAuthStateChange(async(ev,sess)=>{
+      if(ev==='SIGNED_IN'&&sess){
+        USER=sess.user;PROF=null;
+        show();
+        await loadProf();
+        hide();go('pg-dash');loadStats();
+      } else if(ev==='SIGNED_OUT'){
+        USER=null;PROF=null;MATS=[];
+        go('pg-login');hide();
+      }
+    });
+  }catch(e){
+    console.error('SB init error:',e);
+    // Stay on login
+  }
+}
+
+// ── PROFILE ──
+async function loadProf(){
+  const fb={id:USER.id,full_name:USER.email.split('@')[0],role:'paramedic'};
+  try{
+    const res=await Promise.race([
+      SB.from('profiles').select('*').eq('id',USER.id).single(),
+      new Promise(r=>setTimeout(()=>r({data:null,error:'timeout'}),4000))
+    ]);
+    PROF=res.data||fb;
+    if(!res.data){try{await SB.from('profiles').insert(fb);}catch(e){}}
+  }catch(e){PROF=fb;}
+  const n=PROF.full_name||'User';
+  const se=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  const sd=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v;};
+  se('u-nm',n);
+  se('u-rl',rlabel(PROF.role));
+  se('u-av',n[0].toUpperCase());
+  sd('c-mats',isAS()?'':'none');
+  sd('c-usrs',isAdmin()?'':'none');
+}
+
+// ── AUTH ──
+async function signIn(){
+  const email=document.getElementById('em').value.trim();
+  const pass=document.getElementById('pw').value;
+  if(!email||!pass){showA('al-login','e','Enter email and password.');return;}
+  show();
+  try{
+    if(!SB){
+      // Initialize SB now if not ready
+      if(!window.supabase){hide();showA('al-login','e','App still loading. Please wait 2 seconds and try again.');return;}
+      SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+      SB.auth.onAuthStateChange(async(ev,sess)=>{
+        if(ev==='SIGNED_IN'&&sess){USER=sess.user;PROF=null;show();await loadProf();hide();go('pg-dash');loadStats();}
+        else if(ev==='SIGNED_OUT'){USER=null;PROF=null;MATS=[];go('pg-login');hide();}
+      });
+    }
+    const{error}=await SB.auth.signInWithPassword({email,password:pass});
+    if(error){hide();showA('al-login','e',error.message);}
+    // success → onAuthStateChange fires
+  }catch(e){hide();showA('al-login','e','Connection error. Check your internet.');}
+}
+
+async function signOut(){await SB.auth.signOut();}
+
+async function changePw(){
+  const np=document.getElementById('pw-new').value;
+  const cp=document.getElementById('pw-cf').value;
+  if(!np||np.length<6){showA('al-pw','e','Min 6 characters.');return;}
+  if(np!==cp){showA('al-pw','e','Passwords do not match.');return;}
+  show();
+  const{error}=await SB.auth.updateUser({password:np});
+  hide();
+  if(error)showA('al-pw','e',error.message);
+  else{document.getElementById('pw-new').value='';document.getElementById('pw-cf').value='';closeMo('mo-pw');showA('al-login','s','Password updated!');}
+}
+
+// ── THEME ──
+function toggleTheme(){
+  const l=document.body.classList.toggle('light');
+  localStorage.setItem('ems_theme',l?'light':'dark');
+  document.getElementById('th-btn').textContent=l?'☀️':'🌙';
+}
+function applyTheme(){
+  if(localStorage.getItem('ems_theme')==='light'){
+    document.body.classList.add('light');
+    const b=document.getElementById('th-btn');if(b)b.textContent='☀️';
+  }
+}
+
+// ── STATS ──
+async function loadStats(){
+  if(!SB||!PROF)return;
+  try{
+    let q=SB.from('shift_checks').select('check_date',{count:'exact'});
+    if(PROF.role==='paramedic')q=q.eq('checker_id',USER.id);
+    const[cr,mr]=await Promise.all([q,SB.from('check_items').select('id',{count:'exact',head:true}).eq('resolution','still_missing').eq('cleared',false)]);
+    const{data,count}=cr;
+    const today=new Date().toISOString().split('T')[0];
+    const se=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+    se('st-tot',count||0);
+    se('st-tod',(data||[]).filter(c=>c.check_date===today).length);
+    const mc=mr.count||0;
+    se('st-mis',mc);
+    const show2=isAS()&&mc>0;
+    const sd=(id,v)=>{const el=document.getElementById(id);if(el)el.style.display=v;};
+    sd('dl-btn',show2?'block':'none');
+    sd('cl-btn',show2?'block':'none');
+    updateOffCount();
+  }catch(e){console.error(e);}
+}
+
+async function clearMissing(){
+  if(!confirm('Clear the missing items counter?'))return;
+  show();
+  await SB.from('check_items').update({cleared:true}).eq('resolution','still_missing').eq('cleared',false);
+  hide();loadStats();
+}
+
+// ── SETUP ──
+function onDateChg(){
+  const d=document.getElementById('s-dt'),t=document.getElementById('s-st');
+  if(!d||!t)return;
+  const today=new Date().toISOString().split('T')[0];
+  if(d.value===today){const n=new Date();t.min=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');}
+  else t.min='';
+}
+
+async function startCheck(){
+  const date=document.getElementById('s-dt').value;
+  const start=document.getElementById('s-st').value;
+  const shift=document.getElementById('s-sh').value;
+  if(!date||!start||!shift||!SEL_CAR){showA('al-setup','e','Fill all fields and select a car and shift.');return;}
+  const today=new Date().toISOString().split('T')[0];
+  if(date===today){
+    const n=new Date(),ns=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+    if(start<ns){showA('al-setup','e','Start time cannot be before current time ('+ns+').');return;}
+  }
+  show();
+  try{
+    // Load materials for this car (shared + car-specific)
+    let mats;
+    const ck='ems_m_'+SEL_CAR;
+    if(!navigator.onLine){
+      const c=localStorage.getItem(ck)||localStorage.getItem('ems_m_all');
+      if(c)mats=JSON.parse(c);
+      else{hide();showA('al-setup','e','No internet and no cached materials. Open online first.');return;}
+    }else{
+      const{data,error}=await SB.from('materials').select('*,material_cars(car_number)').eq('is_active',true).order('category');
+      if(error)throw new Error(error.message);
+      // Filter: shared (no car rows) OR has this car
+      mats=(data||[]).filter(m=>{
+        const cars=(m.material_cars||[]).map(mc=>mc.car_number);
+        return cars.length===0||cars.includes(SEL_CAR);
+      });
+      localStorage.setItem(ck,JSON.stringify(mats));
+    }
+    if(!mats.length){hide();showA('al-setup','e','No materials for Car '+SEL_CAR+'. Add materials first.');return;}
+    CUR_CHECK={id:'local_'+Date.now(),checker_id:USER.id,checker_name:PROF.full_name,car_number:SEL_CAR,check_date:date,start_time:start,shift,is_offline:!navigator.onLine};
+    CUR_ITEMS=mats.map(m=>({...m,found:m.required_quantity,resolution:null,resolved:false,miss_status:null,verified:false}));
+    const se=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+    se('cl-car',SEL_CAR);se('cl-dt',date);se('cl-st',start);
+    se('cl-sh',shift==='night'?'🌙 Night':'🌅 Morning');
+    se('cl-ch',PROF.full_name);
+    renderChecklist();hide();go('pg-check');
+  }catch(e){hide();showA('al-setup','e',e.message);}
+}
+
+// ── CHECKLIST ──
+function renderChecklist(){
+  const cats=[...new Set(CUR_ITEMS.map(i=>i.category))];
+  let html='';
+  cats.forEach(cat=>{
+    html+='<div class="cats"><div class="catt">'+cat+'</div>';
+    CUR_ITEMS.filter(i=>i.category===cat).forEach(item=>{
+      const idx=CUR_ITEMS.indexOf(item),miss=item.found<item.required_quantity;
+      html+='<div class="mr '+(item.verified?'vf':miss?'miss':'ok')+'" id="mr-'+idx+'">'
+        +'<div class="mn">'+item.name_en+'</div>'
+        +'<div class="mq"><div class="mql">Req</div><div class="mqv">'+item.required_quantity+'</div></div>'
+        +'<div class="qc"><button class="qb" onclick="chg('+idx+',-1)">−</button>'
+        +'<div class="qd '+(miss?'u':'ok')+'" id="qd-'+idx+'">'+item.found+'</div>'
+        +'<button class="qb" onclick="chg('+idx+',1)">+</button></div>'
+        +'<div class="ms" id="ms-'+idx+'">'+(miss?'❌':'✅')+'</div>'
+        +'<label class="mck"><input type="checkbox" id="ck-'+idx+'" '+(item.verified?'checked':'')+' onchange="verif('+idx+',this.checked)"/>'
+        +'<span id="cl-'+idx+'">'+(item.verified?'Done':'Check')+'</span></label>'
+        +'</div>';
+    });
+    html+='</div>';
+  });
+  document.getElementById('cl-body').innerHTML=html;
+  updProg();
+}
+
+function chg(idx,d){
+  CUR_ITEMS[idx].found=Math.max(0,CUR_ITEMS[idx].found+d);
+  const miss=CUR_ITEMS[idx].found<CUR_ITEMS[idx].required_quantity;
+  document.getElementById('qd-'+idx).textContent=CUR_ITEMS[idx].found;
+  document.getElementById('qd-'+idx).className='qd '+(miss?'u':'ok');
+  document.getElementById('ms-'+idx).textContent=miss?'❌':'✅';
+  document.getElementById('mr-'+idx).className='mr '+(CUR_ITEMS[idx].verified?'vf':miss?'miss':'ok');
+  updProg();
+}
+
+function verif(idx,v){
+  CUR_ITEMS[idx].verified=v;
+  document.getElementById('cl-'+idx).textContent=v?'Done':'Check';
+  const miss=CUR_ITEMS[idx].found<CUR_ITEMS[idx].required_quantity;
+  document.getElementById('mr-'+idx).className='mr '+(v?'vf':miss?'miss':'ok');
+  updProg();
+}
+
+function updProg(){
+  const tot=CUR_ITEMS.length,vf=CUR_ITEMS.filter(i=>i.verified).length;
+  document.getElementById('cl-bar').style.width=(tot?Math.round(vf/tot*100):0)+'%';
+  document.getElementById('cl-prog').textContent=vf+'/'+tot+' verified';
+}
+
+function finishCheck(){
+  const unv=CUR_ITEMS.filter(i=>!i.verified);
+  if(unv.length){
+    showA('al-cl','e','Please verify all items. '+unv.length+' not checked yet.');
+    const el=document.getElementById('ck-'+CUR_ITEMS.indexOf(unv[0]));
+    if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.outline='3px solid var(--danger)';setTimeout(()=>el.style.outline='',2500);}
+    return;
+  }
+  const miss=CUR_ITEMS.filter(i=>i.found<i.required_quantity);
+  if(!miss.length){saveReport();return;}
+  window._miss=miss;
+  document.getElementById('res-body').innerHTML=miss.map((item,mi)=>{
+    const sh=item.required_quantity-item.found;
+    return '<div class="mi" id="mi-'+mi+'"><div class="mih"><div><div style="font-size:14px;font-weight:700">'+item.name_en+'</div>'
+      +'<div style="font-size:12px;color:var(--gray);margin-top:2px">Found: '+item.found+' / Req: '+item.required_quantity+'</div></div>'
+      +'<div class="sbg">−'+sh+'</div></div>'
+      +'<div class="rb"><button class="rbn rb-r" id="rbr-'+mi+'" onclick="setRes('+mi+',\'replaced\')">✅ Replaced</button>'
+      +'<button class="rbn rb-m" id="rbm-'+mi+'" onclick="setRes('+mi+',\'still_missing\')">⚠️ Still Missing</button></div></div>';
+  }).join('');
+  go('pg-res');
+}
+
+function setRes(mi,res){
+  const idx=CUR_ITEMS.indexOf(window._miss[mi]);
+  CUR_ITEMS[idx].resolution=res;CUR_ITEMS[idx].resolved=true;
+  document.getElementById('mi-'+mi).className='mi '+(res==='replaced'?'rr':'rm');
+  document.getElementById('rbr-'+mi).classList.toggle('on',res==='replaced');
+  document.getElementById('rbm-'+mi).classList.toggle('on',res==='still_missing');
+}
+
+async function genReport(){
+  const unr=CUR_ITEMS.filter(i=>i.found<i.required_quantity&&!i.resolved);
+  if(unr.length){showA('al-res','e','Resolve all '+unr.length+' item(s) first.');return;}
+  const sm=CUR_ITEMS.filter(i=>i.resolution==='still_missing');
+  if(sm.length){
+    window._sm=sm;
+    document.getElementById('stat-body').innerHTML=sm.map((item,si)=>{
+      const sh=item.required_quantity-item.found;
+      return '<div class="sit" id="si-'+si+'"><div class="sith"><div><div style="font-size:14px;font-weight:700">'+item.name_en+'</div>'
+        +'<div style="font-size:12px;color:var(--gray);margin-top:2px">Shortage: −'+sh+'</div></div>'
+        +'<div id="si-bd-'+si+'"><span class="bd bd-a">Pending</span></div></div>'
+        +'<div class="sbt">'
+        +'<button class="sbn sb-d" id="sd-'+si+'" onclick="setSt('+si+',\'depot\')">🏭 Waiting for Depot</button>'
+        +'<button class="sbn sb-n" id="sn-'+si+'" onclick="setSt('+si+',\'na\')">➖ N/A</button>'
+        +'<button class="sbn sb-u" id="su-'+si+'" onclick="setSt('+si+',\'unavailable\')">🚫 Unavailable</button>'
+        +'</div></div>';
+    }).join('');
+    go('pg-status');return;
+  }
+  await saveReport();
+}
+
+function setSt(si,st){
+  const idx=CUR_ITEMS.indexOf(window._sm[si]);
+  CUR_ITEMS[idx].miss_status=st;
+  const cls={depot:'dp',na:'na',unavailable:'uv'};
+  const bds={depot:'<span class="bd bd-b">🏭 Depot</span>',na:'<span class="bd bd-gr">➖ N/A</span>',unavailable:'<span class="bd bd-r">🚫 Unavailable</span>'};
+  document.getElementById('si-'+si).className='sit '+cls[st];
+  document.getElementById('si-bd-'+si).innerHTML=bds[st];
+  ['d','n','u'].forEach(x=>{const b=document.getElementById('s'+x+'-'+si);if(b)b.classList.remove('on');});
+  const map={depot:'d',na:'n',unavailable:'u'};
+  const b=document.getElementById('s'+map[st]+'-'+si);if(b)b.classList.add('on');
+}
+
+async function confirmStatus(){
+  const p=(window._sm||[]).filter(item=>!CUR_ITEMS[CUR_ITEMS.indexOf(item)].miss_status);
+  if(p.length){showA('al-stat','e','Select status for all '+p.length+' item(s).');return;}
+  await saveReport();
+}
+
+// ── SAVE REPORT ──
+async function saveReport(){
+  show();
+  try{
+    const rows=CUR_ITEMS.map(item=>({material_id:item.id,material_name:item.name_en,required_quantity:item.required_quantity,found_quantity:item.found,resolved:item.resolved||false,resolution:item.resolution||null,miss_status:item.miss_status||null,cleared:false}));
+    if(!navigator.onLine||CUR_CHECK.is_offline){
+      const q=JSON.parse(localStorage.getItem('ems_oq')||'[]');
+      q.push({check:{...CUR_CHECK,status:'completed'},items:rows,ts:new Date().toISOString()});
+      localStorage.setItem('ems_oq',JSON.stringify(q));
+      updateOffCount();buildRpt(CUR_CHECK,CUR_ITEMS,true);hide();go('pg-report');return;
+    }
+    const{data:chk,error:e1}=await SB.from('shift_checks').insert({checker_id:USER.id,checker_name:PROF.full_name,car_number:CUR_CHECK.car_number,check_date:CUR_CHECK.check_date,start_time:CUR_CHECK.start_time,shift:CUR_CHECK.shift,status:'completed'}).select().single();
+    if(e1)throw new Error(e1.message);
+    const{error:e2}=await SB.from('check_items').insert(rows.map(r=>({...r,shift_check_id:chk.id})));
+    if(e2)throw new Error(e2.message);
+    CUR_CHECK=chk;buildRpt(chk,CUR_ITEMS,true);hide();go('pg-report');
+  }catch(e){hide();showA('al-res','e',e.message);}
+}
+
+// ── BUILD REPORT ──
+function buildRpt(check,items,live){
+  window._RC=check;window._RI=items;window._RL=live;
+  const gf=i=>live?i.found:(i.found_quantity??i.found??0);
+  const gn=i=>i.material_name||i.name_en||'—';
+  const gs=s=>s==='depot'?'Waiting for Depot':s==='na'?'N/A':s==='unavailable'?'Unavailable':'Pending';
+  const gc=s=>s==='depot'?'#93c5fd':s==='na'?'#c5cdd8':s==='unavailable'?'#fca5a5':'#fde68a';
+  const miss=items.filter(i=>gf(i)<i.required_quantity);
+  const rep=miss.filter(i=>i.resolution==='replaced');
+  const stm=miss.filter(i=>i.resolution==='still_missing');
+  const ok=items.filter(i=>gf(i)>=i.required_quantity);
+  const sl=s=>s==='night'?'🌙 Night Shift':'🌅 Morning Shift';
+  const mkR=(nm,bd)=>'<div class="ri"><div class="rin">'+nm+'</div>'+bd+'</div>';
+  const mkS=(ic,ti,rows,cls,bf)=>rows.length?'<div class="rs"><div class="rst">'+ic+' '+ti+' <span class="bd '+cls+'">'+rows.length+'</span></div>'+rows.map(i=>mkR(gn(i),bf(i))).join('')+'</div>':'';
+  document.getElementById('rpt-out').innerHTML=
+    '<div class="rh"><div><div class="rtm">INSPECTION REPORT</div><div class="rts">EMS Equipment Verification System</div>'
+    +'<div style="font-size:11px;opacity:.65;margin-top:7px">'+new Date().toLocaleString()+'</div></div>'
+    +'<div class="rcb"><div class="rcl">CAR NUMBER</div><div class="rcn">'+check.car_number+'</div></div></div>'
+    +'<div class="rmg"><div class="rmi"><div class="rmk">Date</div><div class="rmv">'+check.check_date+'</div></div>'
+    +'<div class="rmi"><div class="rmk">Start</div><div class="rmv">'+check.start_time+'</div></div>'
+    +'<div class="rmi"><div class="rmk">Shift</div><div class="rmv">'+sl(check.shift)+'</div></div>'
+    +'<div class="rmi"><div class="rmk">Checker</div><div class="rmv">'+check.checker_name+'</div></div></div>'
+    +'<div class="srow">'
+    +'<div class="sb2 st"><div class="sn" style="color:#93c5fd">'+items.length+'</div><div class="slb">Total</div></div>'
+    +'<div class="sb2 sk"><div class="sn" style="color:#86efac">'+ok.length+'</div><div class="slb">OK</div></div>'
+    +'<div class="sb2 sr"><div class="sn" style="color:#86efac">'+rep.length+'</div><div class="slb">Replaced</div></div>'
+    +'<div class="sb2 sm2"><div class="sn" style="color:#fde68a">'+stm.length+'</div><div class="slb">Missing</div></div></div>'
+    +mkS('✅','Complete',ok,'bd-g',i=>'<span class="bd bd-g">'+gf(i)+'/'+i.required_quantity+'</span>')
+    +mkS('🔄','Replaced',rep,'bd-g',i=>'<span class="bd bd-g">Replaced (−'+(i.required_quantity-gf(i))+')</span>')
+    +(stm.length?'<div class="rs"><div class="rst">⚠️ Still Missing <span class="bd bd-a">'+stm.length+'</span></div>'
+      +stm.map(i=>mkR(gn(i)+' <span style="color:var(--gray);font-size:11px">−'+(i.required_quantity-gf(i))+'</span>',
+        '<span style="background:rgba(0,0,0,.3);color:'+gc(i.miss_status)+';padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700">'+gs(i.miss_status)+'</span>')).join('')+'</div>':'')
+    +'<div style="text-align:center;padding:18px 0;color:var(--gray);font-size:12px;border-top:1px solid var(--bdr);margin-top:10px">EMS Checker — '+new Date().toLocaleString()+'</div>';
+}
+
+// ── PDF ──
+async function dlPDF(){
+  const check=window._RC,items=window._RI,live=window._RL;
+  if(!check||!items||!items.length){alert('No report data.');return;}
+  // Load jsPDF on demand
+  if(!window.jspdf){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    document.head.appendChild(s);
+    await new Promise((res,rej)=>{s.onload=res;s.onerror=rej;});
+  }
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const gf=i=>live?i.found:(i.found_quantity??i.found??0);
+  const gn=i=>i.material_name||i.name_en||'—';
+  const gs=s=>s==='depot'?'Waiting for Depot':s==='na'?'N/A':s==='unavailable'?'Unavailable':'Pending';
+  const miss=items.filter(i=>gf(i)<i.required_quantity);
+  const rep=miss.filter(i=>i.resolution==='replaced');
+  const stm=miss.filter(i=>i.resolution==='still_missing');
+  const ok=items.filter(i=>gf(i)>=i.required_quantity);
+  doc.setFillColor(176,16,21);doc.rect(0,0,210,40,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(22);doc.setFont('helvetica','bold');doc.text('INSPECTION REPORT',14,15);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text('EMS Equipment Verification System',14,23);
+  doc.text('Generated: '+new Date().toLocaleString(),14,30);
+  doc.setFontSize(24);doc.setFont('helvetica','bold');doc.text('Car '+check.car_number,196,22,{align:'right'});
+  doc.setTextColor(0,0,0);let y=48;
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text('Date: '+check.check_date+'   Start: '+check.start_time+'   Shift: '+(check.shift==='night'?'Night':'Morning')+'   Checker: '+check.checker_name,14,y);y+=10;
+  doc.setFillColor(240,244,255);doc.rect(14,y,182,11,'F');
+  doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text('Total: '+items.length+'   OK: '+ok.length+'   Replaced: '+rep.length+'   Still Missing: '+stm.length,18,y+7);y+=17;
+  const sec=(ti,rows,col,lf)=>{
+    if(!rows.length)return;
+    if(y>265){doc.addPage();y=18;}
+    doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(...col);doc.text(ti,14,y);y+=6;
+    doc.setTextColor(40,40,40);doc.setFontSize(8);doc.setFont('helvetica','normal');
+    rows.forEach(i=>{if(y>274){doc.addPage();y=18;}doc.text('  '+gn(i),18,y);doc.text(lf(i),196,y,{align:'right'});y+=5;});y+=3;
+  };
+  sec('Complete Items',ok,[22,163,74],i=>gf(i)+'/'+i.required_quantity);
+  sec('Replaced Items',rep,[21,128,61],i=>'Replaced (was -'+(i.required_quantity-gf(i))+')');
+  sec('Still Missing',stm,[180,100,0],i=>'-'+(i.required_quantity-gf(i))+' — '+gs(i.miss_status));
+  doc.setFontSize(7);doc.setTextColor(160,160,160);doc.text('EMS Checker System',14,287);
+  doc.save('EMS-Car'+check.car_number+'-'+check.check_date+'.pdf');
+}
+
+// ── MISSING REPORT PDF ──
+async function dlMissingPDF(){
+  show();
+  try{
+    const{data:items,error}=await SB.from('check_items')
+      .select('*,shift_checks(car_number,checker_name,check_date,start_time,shift)')
+      .eq('resolution','still_missing').eq('cleared',false).order('created_at',{ascending:false});
+    if(error)throw new Error(error.message);
+    if(!items||!items.length){hide();alert('No missing items.');return;}
+    if(!window.jspdf){
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      document.head.appendChild(s);
+      await new Promise((res,rej)=>{s.onload=res;s.onerror=rej;});
+    }
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const now=new Date();
+    const sl=s=>s==='depot'?'Waiting for Depot':s==='na'?'N/A':s==='unavailable'?'Unavailable':'Pending';
+    doc.setFillColor(176,16,21);doc.rect(0,0,210,40,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(20);doc.setFont('helvetica','bold');doc.text('MISSING ITEMS REPORT',14,15);
+    doc.setFontSize(9);doc.setFont('helvetica','normal');
+    doc.text('EMS Equipment Verification System',14,23);
+    doc.text('Generated: '+now.toLocaleString()+'   By: '+(PROF&&PROF.full_name||'—'),14,30);
+    doc.setTextColor(0,0,0);let y=48;
+    doc.setFillColor(255,245,220);doc.rect(14,y,182,11,'F');
+    doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(160,80,0);
+    doc.text('Total missing items: '+items.length,18,y+7);
+    doc.setTextColor(0,0,0);y+=17;
+    const bycar={};
+    items.forEach(item=>{const c=item.shift_checks&&item.shift_checks.car_number||'?';if(!bycar[c])bycar[c]=[];bycar[c].push(item);});
+    Object.keys(bycar).sort().forEach(car=>{
+      const ci=bycar[car];
+      if(y>262){doc.addPage();y=18;}
+      doc.setFillColor(176,16,21);doc.rect(14,y,182,9,'F');
+      doc.setTextColor(255,255,255);doc.setFontSize(10);doc.setFont('helvetica','bold');
+      doc.text('Car '+car+' — '+ci.length+' missing item'+(ci.length>1?'s':''),18,y+6);
+      doc.setTextColor(0,0,0);y+=13;
+      ci.forEach(item=>{
+        if(y>274){doc.addPage();y=18;}
+        const sh=item.required_quantity-item.found_quantity;
+        const ch=item.shift_checks&&item.shift_checks.checker_name||'—';
+        const dt=item.shift_checks&&item.shift_checks.check_date||'—';
+        const tm=item.shift_checks&&item.shift_checks.start_time||'—';
+        doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(40,40,40);
+        doc.text('  '+(item.material_name||'—'),18,y);
+        doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(100,100,100);
+        doc.text('−'+sh+'  Checker: '+ch+'  Date: '+dt+'  Time: '+tm,22,y+4);
+        doc.setTextColor(160,80,0);doc.text('Status: '+sl(item.miss_status),22,y+8);
+        doc.setTextColor(0,0,0);doc.setDrawColor(220,220,220);doc.line(18,y+11,196,y+11);y+=14;
+      });y+=3;
+    });
+    doc.setFontSize(7);doc.setTextColor(160,160,160);doc.text('EMS Checker System',14,287);
+    doc.save('EMS-Missing-'+now.toISOString().split('T')[0]+'.pdf');
+    hide();
+  }catch(e){hide();alert('Error: '+e.message);}
+}
+
+// ── REPORTS ──
+function goReports(){go('pg-reports');loadRpts();}
+async function loadRpts(){
+  const body=document.getElementById('rpts-body');
+  body.innerHTML='<div style="display:flex;flex-direction:column;gap:7px;padding:7px">'
+    +'<div style="height:40px;background:var(--navy3);border-radius:7px;animation:pulse 1.5s ease-in-out infinite"></div>'
+    +'<div style="height:40px;background:var(--navy3);border-radius:7px;animation:pulse 1.5s ease-in-out infinite"></div>'
+    +'<div style="height:40px;background:var(--navy3);border-radius:7px;animation:pulse 1.5s ease-in-out infinite"></div></div>';
+  try{
+    let q=SB.from('shift_checks').select('*').eq('status','completed').order('created_at',{ascending:false});
+    if(PROF&&PROF.role==='paramedic')q=q.eq('checker_id',USER.id);
+    const{data}=await q;
+    ALL_RPTS=data||[];renderRpts(ALL_RPTS);
+  }catch(e){body.innerHTML='<div class="al al-e">Error: '+e.message+'</div>';}
+}
+function filterRpts(){
+  const ch=(document.getElementById('rf-ch').value||'').toLowerCase();
+  const car=document.getElementById('rf-car').value||'';
+  const sh=document.getElementById('rf-sh').value||'';
+  renderRpts(ALL_RPTS.filter(r=>(!ch||(r.checker_name||'').toLowerCase().includes(ch))&&(!car||r.car_number===car)&&(!sh||r.shift===sh)));
+}
+function clearFilters(){
+  document.getElementById('rf-ch').value='';
+  document.getElementById('rf-car').value='';
+  document.getElementById('rf-sh').value='';
+  renderRpts(ALL_RPTS);
+}
+function renderRpts(data){
+  const body=document.getElementById('rpts-body');
+  if(!data||!data.length){body.innerHTML='<div class="empty"><div class="ei">📭</div><div class="et">No reports found</div></div>';return;}
+  const sb=s=>'<span class="bd '+(s==='night'?'bd-b':'bd-a')+'">'+(s==='night'?'Night':'Morning')+'</span>';
+  body.innerHTML='<div class="tw"><table class="dt"><thead><tr><th>Date</th><th>Car</th><th>Shift</th><th>Checker</th><th>Start</th><th></th></tr></thead><tbody>'
+    +data.map(r=>'<tr><td>'+r.check_date+'</td><td><span class="bd bd-r">Car '+r.car_number+'</span></td><td>'+sb(r.shift)+'</td><td>'+r.checker_name+'</td><td>'+r.start_time+'</td>'
+      +'<td><div class="acts"><button class="btn sc sm" onclick="viewRpt(\''+r.id+'\')">View</button>'
+      +(isAdmin()?'<button class="btn dn sm" onclick="delRpt(\''+r.id+'\')">Delete</button>':'')
+      +'</div></td></tr>').join('')+'</tbody></table></div>';
+}
+async function viewRpt(id){
+  show();
+  try{
+    const{data:chk}=await SB.from('shift_checks').select('*').eq('id',id).single();
+    const{data:items}=await SB.from('check_items').select('*').eq('shift_check_id',id);
+    buildRpt(chk,items||[],false);hide();go('pg-report');
+  }catch(e){hide();alert(e.message);}
+}
+async function delRpt(id){
+  if(!confirm('Delete this report? Cannot be undone.'))return;
+  show();
+  try{
+    await SB.from('check_items').delete().eq('shift_check_id',id);
+    await SB.from('shift_checks').delete().eq('id',id);
+    hide();loadRpts();
+  }catch(e){hide();alert('Error: '+e.message);}
+}
+
+// ── MATERIALS ──
+function goMats(){
+  go('pg-mats');
+  buildMatTabs();ACT_TAB='all';setMatTab('all');loadMats();
+}
+function buildMatTabs(){
+  const el=document.getElementById('mat-tabs');
+  el.innerHTML='<div class="ctab on" id="mt-all" onclick="selTab(\'all\')">All</div>'
+    +CARS.map(c=>'<div class="ctab" id="mt-'+c+'" onclick="selTab(\''+c+'\')">'+c+'</div>').join('');
+}
+function selTab(car){
+  ACT_TAB=car;setMatTab(car);loadMats();
+}
+function setMatTab(car){
+  document.querySelectorAll('.ctab').forEach(t=>t.classList.remove('on'));
+  const el=document.getElementById('mt-'+car);if(el)el.classList.add('on');
+  const lb=document.getElementById('mat-lbl');
+  if(lb)lb.textContent=car==='all'?'All materials':'Car '+car+' materials (specific + shared)';
+}
+async function loadMats(){
+  document.getElementById('mats-tb').innerHTML='<tr><td colspan="6"><div style="padding:8px;display:flex;flex-direction:column;gap:6px">'
+    +'<div style="height:34px;background:var(--navy3);border-radius:6px;animation:pulse 1.5s ease-in-out infinite"></div>'
+    +'<div style="height:34px;background:var(--navy3);border-radius:6px;animation:pulse 1.5s ease-in-out infinite"></div>'
+    +'<div style="height:34px;background:var(--navy3);border-radius:6px;animation:pulse 1.5s ease-in-out infinite"></div>'
+    +'</div></td></tr>';
+  const{data}=await SB.from('materials').select('*,material_cars(car_number)').order('category');
+  let mats=data||[];
+  if(ACT_TAB!=='all')mats=mats.filter(m=>{const c=(m.material_cars||[]).map(mc=>mc.car_number);return c.length===0||c.includes(ACT_TAB);});
+  MATS=mats;renderMats();
+}
+function renderMats(){
+  const s=(document.getElementById('mat-srch')&&document.getElementById('mat-srch').value||'').toLowerCase();
+  const f=MATS.filter(m=>m.name_en.toLowerCase().includes(s)||(m.category||'').toLowerCase().includes(s));
+  const cb=m=>{const c=(m.material_cars||[]).map(mc=>mc.car_number);return c.length?c.map(x=>'<span class="bd bd-r" style="margin:1px">'+x+'</span>').join(' '):'<span class="bd bd-gr">All Cars</span>';};
+  document.getElementById('mats-tb').innerHTML=f.length
+    ?f.map(m=>'<tr><td style="font-weight:600">'+m.name_en+'</td><td><span class="bd bd-gr">'+(m.category||'—')+'</span></td>'
+      +'<td style="text-align:center;font-weight:700">'+m.required_quantity+'</td>'
+      +'<td>'+cb(m)+'</td>'
+      +'<td><span class="bd '+(m.is_active?'bd-g':'bd-gr')+'">'+(m.is_active?'Active':'Inactive')+'</span></td>'
+      +'<td><div class="acts"><button class="btn sc sm" onclick="openMatMo(\''+m.id+'\')">Edit</button>'
+      +'<button class="btn '+(m.is_active?'dn':'su')+' sm" onclick="togMat(\''+m.id+'\','+m.is_active+')">'+(m.is_active?'Disable':'Enable')+'</button>'
+      +'</div></td></tr>').join('')
+    :'<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:40px">No materials</td></tr>';
+}
+
+// ── CAR CHECKBOXES IN MODAL ──
+function buildCarCBs(){
+  const grid=document.getElementById('car-cbs');
+  if(!grid||grid.children.length)return;
+  grid.innerHTML=CARS.map(c=>
+    '<label id="cl-'+c+'" onclick="togCar(\''+c+'\')" style="display:flex;align-items:center;gap:7px;padding:9px 11px;border-radius:7px;border:2px solid var(--bdr);background:var(--card);cursor:pointer;transition:all .2s;user-select:none">'
+    +'<div id="ci-'+c+'" style="width:18px;height:18px;border-radius:4px;border:2px solid var(--bdr);background:transparent;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;transition:all .2s"></div>'
+    +'<span style="font-size:13px;font-weight:700">Car '+c+'</span></label>'
+  ).join('');
+}
+function togCar(car){
+  const lbl=document.getElementById('cl-'+car),ic=document.getElementById('ci-'+car);
+  const on=lbl&&lbl.dataset.on==='1';
+  setCarOn(car,!on);
+  const any=CARS.some(c=>{const l=document.getElementById('cl-'+c);return l&&l.dataset.on==='1';});
+  setAllOn(!any);updSum();
+}
+function setCarOn(car,on){
+  const lbl=document.getElementById('cl-'+car),ic=document.getElementById('ci-'+car);
+  if(!lbl||!ic)return;
+  lbl.dataset.on=on?'1':'0';
+  lbl.style.borderColor=on?'var(--red)':'var(--bdr)';
+  lbl.style.background=on?'rgba(232,21,27,.1)':'var(--card)';
+  ic.style.background=on?'var(--red)':'transparent';
+  ic.style.borderColor=on?'var(--red)':'var(--bdr)';
+  ic.textContent=on?'✓':'';
+  ic.style.color='#fff';
+}
+function toggleAllCars(){
+  const any=CARS.some(c=>{const l=document.getElementById('cl-'+c);return l&&l.dataset.on==='1';});
+  if(!any)return;
+  CARS.forEach(c=>setCarOn(c,false));
+  setAllOn(true);updSum();
+}
+function setAllOn(on){
+  const lbl=document.getElementById('lbl-all'),ic=document.getElementById('ic-all');
+  if(!lbl||!ic)return;
+  lbl.style.borderColor=on?'var(--green)':'var(--bdr)';
+  lbl.style.background=on?'rgba(34,197,94,.1)':'var(--card)';
+  ic.style.background=on?'var(--green)':'transparent';
+  ic.textContent=on?'✓':'';
+}
+function updSum(){
+  const sel=CARS.filter(c=>{const l=document.getElementById('cl-'+c);return l&&l.dataset.on==='1';});
+  const el=document.getElementById('mat-sum');if(!el)return;
+  el.textContent=sel.length?'🚑 Assigned to: Car '+sel.join(', Car '):'✅ Shared — all cars';
+  el.style.color=sel.length?'#fca5a5':'var(--green)';
+}
+function resetCarMo(){
+  buildCarCBs();CARS.forEach(c=>setCarOn(c,false));setAllOn(true);updSum();
+}
+function setCars(assigned){
+  buildCarCBs();CARS.forEach(c=>setCarOn(c,assigned.includes(c)));
+  setAllOn(assigned.length===0);updSum();
+}
+
+async function openMatMo(id=null){
+  resetCarMo();
+  document.getElementById('mat-id').value=id||'';
+  if(id){
+    const m=MATS.find(x=>x.id===id);if(!m)return;
+    document.getElementById('mat-nm').value=m.name_en;
+    document.getElementById('mat-ct').value=m.category||'';
+    document.getElementById('mat-qt').value=m.required_quantity;
+    document.getElementById('mo-mat-t').textContent='Edit Material';
+    setCars((m.material_cars||[]).map(mc=>mc.car_number));
+  }else{
+    document.getElementById('mat-nm').value='';
+    document.getElementById('mat-ct').value='';
+    document.getElementById('mat-qt').value=1;
+    document.getElementById('mo-mat-t').textContent='Add Material';
+    if(ACT_TAB!=='all')setCars([ACT_TAB]);
+  }
+  openMo('mo-mat');
+}
+async function saveMat(){
+  const id=document.getElementById('mat-id').value;
+  const pay={name_en:document.getElementById('mat-nm').value.trim(),category:document.getElementById('mat-ct').value.trim(),required_quantity:parseInt(document.getElementById('mat-qt').value)||1};
+  if(!pay.name_en){alert('Enter a name.');return;}
+  const sel=CARS.filter(c=>{const l=document.getElementById('cl-'+c);return l&&l.dataset.on==='1';});
+  closeMo('mo-mat');
+  let mid=id;
+  if(id){await SB.from('materials').update(pay).eq('id',id);}
+  else{const{data:nm}=await SB.from('materials').insert({...pay,is_active:true}).select().single();mid=nm.id;}
+  await SB.from('material_cars').delete().eq('material_id',mid);
+  if(sel.length)await SB.from('material_cars').insert(sel.map(c=>({material_id:mid,car_number:c})));
+  CARS.forEach(c=>localStorage.removeItem('ems_m_'+c));
+  MATS=[];loadMats();
+}
+async function togMat(id,cur){
+  await SB.from('materials').update({is_active:!cur}).eq('id',id);
+  CARS.forEach(c=>localStorage.removeItem('ems_m_'+c));
+  MATS=[];loadMats();
+}
+
+// ── USERS ──
+function goUsers(){go('pg-users');loadUsers();}
+async function loadUsers(){
+  const{data}=await SB.from('profiles').select('*').order('full_name');
+  if(!data||!data.length){document.getElementById('users-tb').innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--gray);padding:40px">No users</td></tr>';return;}
+  document.getElementById('users-tb').innerHTML=data.map(u=>{
+    const me=u.id===USER.id;
+    return '<tr><td style="font-weight:600">'+u.full_name+'</td>'
+      +'<td><span class="bd '+rcolor(u.role)+'">'+rlabel(u.role)+'</span></td>'
+      +'<td>'+(isAdmin()&&!me
+        ?'<div class="acts"><select class="fc" style="width:130px;padding:5px 9px;font-size:12px" onchange="updRole(\''+u.id+'\',this.value)">'
+          +'<option value="paramedic"'+(u.role==='paramedic'?' selected':'')+'>Paramedic</option>'
+          +'<option value="supervisor"'+(u.role==='supervisor'?' selected':'')+'>Supervisor</option>'
+          +'<option value="admin"'+(u.role==='admin'?' selected':'')+'>Admin</option>'
+          +'</select><button class="btn dn sm" onclick="delUser(\''+u.id+'\',\''+u.full_name+'\')">Delete</button></div>'
+        :'—')+'</td></tr>';
+  }).join('');
+}
+async function updRole(uid,role){
+  const{error}=await SB.from('profiles').update({role}).eq('id',uid);
+  if(error){alert('Error: '+error.message);return;}
+  loadUsers();
+}
+async function delUser(uid,name){
+  if(!confirm('Delete "'+name+'"? Also deletes all their reports.'))return;
+  show();
+  try{
+    const{data:checks}=await SB.from('shift_checks').select('id').eq('checker_id',uid);
+    if(checks&&checks.length){
+      for(const c of checks)await SB.from('check_items').delete().eq('shift_check_id',c.id);
+      await SB.from('shift_checks').delete().eq('checker_id',uid);
+    }
+    await SB.from('profiles').delete().eq('id',uid);
+    hide();loadUsers();
+  }catch(e){hide();alert('Error: '+e.message);}
+}
+
+// ── OFFLINE ──
+function updateOffCount(){
+  const q=JSON.parse(localStorage.getItem('ems_oq')||'[]');
+  const el1=document.getElementById('st-off'),el2=document.getElementById('off-card');
+  if(el1)el1.textContent=q.length;
+  if(el2)el2.style.display=q.length?'':'none';
+}
+async function syncOffline(){
+  if(!navigator.onLine||!SB||!USER)return;
+  const queue=JSON.parse(localStorage.getItem('ems_oq')||'[]');
+  if(!queue.length){updateOffCount();return;}
+  const failed=[];
+  for(const entry of queue){
+    try{
+      const{data:chk,error:e1}=await SB.from('shift_checks').insert({checker_id:USER.id,checker_name:entry.check.checker_name,car_number:entry.check.car_number,check_date:entry.check.check_date,start_time:entry.check.start_time,shift:entry.check.shift||'morning',status:'completed'}).select().single();
+      if(e1)throw new Error(e1.message);
+      const{error:e2}=await SB.from('check_items').insert(entry.items.map(r=>({...r,shift_check_id:chk.id})));
+      if(e2)throw new Error(e2.message);
+    }catch(e){failed.push(entry);}
+  }
+  localStorage.setItem('ems_oq',JSON.stringify(failed));
+  updateOffCount();loadStats();
+}
+
+// ── UTILS ──
+function go(id){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  window.scrollTo(0,0);
+  if(id==='pg-dash'&&SB&&PROF)loadStats();
+}
+function show(){document.getElementById('ld').style.display='flex';}
+function hide(){document.getElementById('ld').style.display='none';}
+function openMo(id){document.getElementById(id).classList.add('open');}
+function closeMo(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+});
+function showA(id,tp,msg){
+  const el=document.getElementById(id);if(!el)return;
+  const c=tp==='e'?'al-e':tp==='s'?'al-s':'al-i';
+  const ic=tp==='e'?'❌':tp==='s'?'✅':'ℹ️';
+  el.innerHTML='<div class="al '+c+'">'+ic+' '+msg+'</div>';
+  setTimeout(()=>{el.innerHTML='';},6000);
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</body>
+</html>
