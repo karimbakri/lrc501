@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>EMS Checker</title>
 <meta name="theme-color" content="#E8151B"/>
@@ -530,48 +531,21 @@ window.addEventListener('DOMContentLoaded',()=>{
 
 async function initSB(){
   try{
-    if(!window.supabase){
-      // Library not loaded yet, retry
-      setTimeout(initSB,200);
-      return;
-    }
-    SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-
-    // Check for existing session
+    if(!window.supabase){setTimeout(initSB,100);return;}
+    initClient();
+    // Check for existing session silently
     const{data,error}=await Promise.race([
       SB.auth.getSession(),
-      new Promise(r=>setTimeout(()=>r({data:{session:null},error:null}),5000))
+      new Promise(r=>setTimeout(()=>r({data:{session:null},error:null}),4000))
     ]);
-
     if(!error&&data.session){
       show();
       USER=data.session.user;
       await loadProf();
       hide();go('pg-dash');loadStats();
     }
-    // else: stay on login (already showing)
-
-    // Listen for auth changes
-    SB.auth.onAuthStateChange(async(ev,sess)=>{
-      if(ev==='SIGNED_IN'&&sess){
-        // Only react if this is a real new login (not a token refresh)
-        if(!PROF){
-          USER=sess.user;
-          show();
-          await loadProf();
-          hide();go('pg-dash');loadStats();
-        } else {
-          // Token refresh - just silently update USER, no loading screen
-          USER=sess.user;
-        }
-      } else if(ev==='SIGNED_OUT'){
-        USER=null;PROF=null;MATS=[];
-        go('pg-login');hide();
-      }
-    });
   }catch(e){
     console.error('SB init error:',e);
-    // Stay on login
   }
 }
 
@@ -597,39 +571,32 @@ async function loadProf(){
 }
 
 // ── AUTH ──
+function initClient(){
+  if(SB)return;
+  SB=window.supabase.createClient(SB_URL,SB_KEY,{
+    auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}
+  });
+  SB.auth.onAuthStateChange(async(ev,sess)=>{
+    if(ev==='TOKEN_REFRESHED'&&sess){USER=sess.user;return;}
+    if(ev==='SIGNED_OUT'){USER=null;PROF=null;MATS=[];go('pg-login');hide();}
+  });
+}
 async function signIn(){
   const email=document.getElementById('em').value.trim();
   const pass=document.getElementById('pw').value;
   if(!email||!pass){showA('al-login','e','Enter email and password.');return;}
   show();
   try{
-    // Wait up to 3 seconds for supabase library to load
-    let waited=0;
-    while(!window.supabase && waited<30){
-      await new Promise(r=>setTimeout(r,100));
-      waited++;
-    }
-    if(!window.supabase){
-      hide();
-      showA('al-login','e','Could not connect. Please refresh the page and try again.');
-      return;
-    }
-    // Init SB client if not already done
-    if(!SB){
-      SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-      SB.auth.onAuthStateChange(async(ev,sess)=>{
-        if(ev==='SIGNED_IN'&&sess){
-          if(!PROF){USER=sess.user;show();await loadProf();hide();go('pg-dash');loadStats();}
-          else{USER=sess.user;}
-        } else if(ev==='SIGNED_OUT'){USER=null;PROF=null;MATS=[];go('pg-login');hide();}
-      });
-    }
-    const{error}=await SB.auth.signInWithPassword({email,password:pass});
-    if(error){hide();showA('al-login','e',error.message);}
-    // success handled by onAuthStateChange
+    if(!SB)initClient();
+    const{data,error}=await SB.auth.signInWithPassword({email,password:pass});
+    if(error){hide();showA('al-login','e',error.message);return;}
+    // Manually handle login since onAuthStateChange may not fire immediately
+    USER=data.user;
+    await loadProf();
+    hide();go('pg-dash');loadStats();
   }catch(e){
     hide();
-    showA('al-login','e','Connection error. Please check your internet and try again.');
+    showA('al-login','e','Connection error: '+e.message);
   }
 }
 
@@ -1378,6 +1345,5 @@ function showA(id,tp,msg){
   setTimeout(()=>{el.innerHTML='';},6000);
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </body>
 </html>
