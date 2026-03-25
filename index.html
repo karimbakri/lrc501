@@ -545,10 +545,16 @@ async function initSB(){
     // Listen for auth changes
     SB.auth.onAuthStateChange(async(ev,sess)=>{
       if(ev==='SIGNED_IN'&&sess){
-        USER=sess.user;PROF=null;
-        show();
-        await loadProf();
-        hide();go('pg-dash');loadStats();
+        // Only react if this is a real new login (not a token refresh)
+        if(!PROF){
+          USER=sess.user;
+          show();
+          await loadProf();
+          hide();go('pg-dash');loadStats();
+        } else {
+          // Token refresh - just silently update USER, no loading screen
+          USER=sess.user;
+        }
       } else if(ev==='SIGNED_OUT'){
         USER=null;PROF=null;MATS=[];
         go('pg-login');hide();
@@ -593,8 +599,10 @@ async function signIn(){
       if(!window.supabase){hide();showA('al-login','e','App still loading. Please wait 2 seconds and try again.');return;}
       SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
       SB.auth.onAuthStateChange(async(ev,sess)=>{
-        if(ev==='SIGNED_IN'&&sess){USER=sess.user;PROF=null;show();await loadProf();hide();go('pg-dash');loadStats();}
-        else if(ev==='SIGNED_OUT'){USER=null;PROF=null;MATS=[];go('pg-login');hide();}
+        if(ev==='SIGNED_IN'&&sess){
+          if(!PROF){USER=sess.user;show();await loadProf();hide();go('pg-dash');loadStats();}
+          else{USER=sess.user;}
+        } else if(ev==='SIGNED_OUT'){USER=null;PROF=null;MATS=[];go('pg-login');hide();}
       });
     }
     const{error}=await SB.auth.signInWithPassword({email,password:pass});
