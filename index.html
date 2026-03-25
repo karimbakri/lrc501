@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,shrink-to-fit=no"/>
 <title>EMS Checker</title>
 <meta name="theme-color" content="#E8151B"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -15,8 +15,24 @@
 :root{--red:#E8151B;--red2:#b01015;--navy:#0a0f1e;--navy2:#111827;--navy3:#1c2637;--bdr:#243044;--card:#141e2e;--card2:#1e2d42;--txt:#e8edf3;--gray:#8896a5;--gray2:#c5cdd8;--green:#22c55e;--amber:#f59e0b;--danger:#ef4444;--blue:#3b82f6;}
 body.light{--navy:#f0f4f8;--navy2:#e2e8f0;--navy3:#dde4ed;--bdr:#cbd5e1;--card:#fff;--card2:#e2e8f0;--txt:#0f172a;--gray:#64748b;--gray2:#475569;}
 body.light .bar{background:rgba(255,255,255,.97);}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Barlow',sans-serif;background:var(--navy);color:var(--txt);min-height:100vh;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Barlow',sans-serif;background:var(--navy);color:var(--txt);min-height:100vh;min-height:-webkit-fill-available;-webkit-font-smoothing:antialiased;}
+html{height:-webkit-fill-available;}
+
+/* iOS safe area (notch + home indicator) */
+.bar{padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right));}
+.mc{padding-bottom:max(22px,env(safe-area-inset-bottom));}
+#pg-login{padding:max(20px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));}
+
+/* Better touch targets */
+.btn{min-height:44px;}
+.tbtn{min-height:36px;}
+.qb{min-width:36px;min-height:36px;}
+.cb{min-height:52px;}
+.fc{min-height:44px;}
+select.fc{min-height:44px;}
+.ctab{min-height:36px;}
+.mck input{min-width:20px;min-height:20px;}
 .bg{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(232,21,27,.08) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 90%,rgba(232,21,27,.05) 0%,transparent 50%);}
 #app{position:relative;z-index:1;}
 .pg{display:none;min-height:100vh;flex-direction:column;}
@@ -223,7 +239,142 @@ table.dt tbody tr:hover td{background:var(--navy3);}
 /* BANNERS */
 .bn{position:fixed;top:0;left:0;right:0;z-index:9998;text-align:center;padding:9px 14px;font-size:13px;font-weight:700;display:none;}
 @media print{body{background:#fff!important;color:#000!important;}.bar,.btn,.no-print{display:none!important;}.rh{background:#cc1015!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
-@media(max-width:620px){.bar{padding:0 12px;}.mc{padding:14px;}.mr{flex-wrap:wrap;}.rb,.sbt{flex-direction:column;}.sg2{grid-template-columns:1fr 1fr;}.tr{gap:4px;}}
+
+/* ── TABLET (max 768px) ── */
+@media(max-width:768px){
+  .ag{grid-template-columns:1fr 1fr;}
+  .sg{grid-template-columns:1fr 1fr;}
+  .sg2{grid-template-columns:1fr 1fr;}
+  .rmg{grid-template-columns:1fr 1fr;}
+  .srow{flex-wrap:wrap;}
+  .sb2{min-width:calc(50% - 5px);}
+  .rh{flex-direction:column;}
+  .rcb{align-self:flex-start;}
+  table.dt th,table.dt td{padding:9px 10px;font-size:12px;}
+}
+
+/* ── MOBILE (max 480px) — iPhone 12 and similar ── */
+@media(max-width:480px){
+  .filter-grid{grid-template-columns:1fr 1fr!important;}
+  .filter-grid > .fg:last-of-type{grid-column:1;}
+  .filter-grid > .btn{grid-column:2;height:auto;align-self:end;}
+
+  /* Topbar */
+  .bar{padding:0 10px;height:54px;}
+  .lsub{display:none;}
+  .lname{font-size:17px;}
+  .lic{width:30px;height:30px;font-size:15px;}
+  .tr{gap:4px;}
+  .ub{padding:4px 8px;}
+  .unm{font-size:12px;}
+  .url{display:none;}
+  .uav{width:24px;height:24px;font-size:10px;}
+  .tbtn{padding:5px 8px;font-size:11px;}
+
+  /* Page content */
+  .mc{padding:12px;}
+  .ph{margin-bottom:16px;}
+  .ph h1{font-size:26px;}
+  .card{padding:14px;}
+
+  /* Dashboard stats - 2 columns on mobile */
+  .sg{grid-template-columns:1fr 1fr;gap:10px;}
+  .sv{font-size:30px;}
+  .si{font-size:22px;}
+  .sl{font-size:10px;}
+
+  /* Dashboard action cards - 1 column */
+  .ag{grid-template-columns:1fr;}
+  .ac{padding:18px;}
+  .aci{font-size:30px;margin-bottom:8px;}
+  .act{font-size:15px;}
+  .acd{font-size:12px;}
+  .acar{font-size:18px;}
+
+  /* Setup page */
+  .sg2{grid-template-columns:1fr;}
+  .cg{grid-template-columns:repeat(3,1fr);gap:8px;}
+  .cb{padding:14px 6px;font-size:17px;}
+
+  /* Login */
+  .lbox{padding:14px;}
+  .lcard{padding:20px;}
+  .lemb{width:64px;height:64px;font-size:28px;}
+  .ltit{font-size:24px;}
+
+  /* Checklist row - wrap on small screens */
+  .mr{flex-wrap:wrap;gap:8px;padding:10px;}
+  .mn{width:100%;font-size:13px;}
+  .mq{min-width:50px;}
+  .mck{min-width:60px;}
+
+  /* Resolution buttons - stack vertically */
+  .rb{flex-direction:column;gap:8px;}
+  .sbt{flex-direction:column;gap:8px;}
+  .sbn{min-width:unset;}
+
+  /* Report */
+  .rh{flex-direction:column;gap:12px;padding:18px;}
+  .rtm{font-size:28px;}
+  .rcn{font-size:36px;}
+  .rmg{grid-template-columns:1fr 1fr;}
+  .srow{flex-wrap:wrap;}
+  .sb2{min-width:calc(50% - 5px);padding:12px;}
+  .sn{font-size:30px;}
+
+  /* Reports list filters - stack */
+  .card > div[style*="grid-template-columns:1fr 1fr 1fr"]{
+    display:flex!important;flex-direction:column;gap:10px;
+  }
+
+  /* Tables - horizontal scroll */
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table.dt{min-width:500px;}
+  table.dt th,table.dt td{padding:8px 10px;font-size:11px;}
+
+  /* Materials car tabs - scroll horizontally */
+  .ctabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+  .ctab{flex-shrink:0;}
+
+  /* Car checkboxes in modal - 2 columns */
+  #car-cbs{grid-template-columns:1fr 1fr!important;}
+
+  /* Modals */
+  .mdl{padding:18px;border-radius:12px;}
+  .mtt{font-size:15px;}
+
+  /* Checklist header - stack */
+  .clh{flex-direction:column;align-items:flex-start;gap:10px;padding:12px;}
+  .cm{gap:12px;}
+  .clh .btn{width:100%;}
+
+  /* Progress bar */
+  .pbw{margin-bottom:12px;}
+
+  /* O2 entries */
+  .o2-entry{flex-wrap:wrap;gap:5px;}
+  .o2-sel{width:70px;}
+  .o2-num{width:70px;}
+
+  /* Buttons */
+  .btn.lg{padding:13px 20px;font-size:14px;}
+  .acts{flex-wrap:wrap;}
+
+  /* Missing status badges */
+  .sc2{padding:14px;}
+
+  /* Users table - hide less important columns */
+  .modal-car-grid{grid-template-columns:1fr 1fr!important;}
+}
+
+/* ── VERY SMALL (max 360px) — older small phones ── */
+@media(max-width:360px){
+  .cg{grid-template-columns:repeat(3,1fr);}
+  .cb{padding:12px 4px;font-size:15px;}
+  .sg{grid-template-columns:1fr 1fr;}
+  .ag{grid-template-columns:1fr;}
+  table.dt{min-width:420px;}
+}
 </style>
 </head>
 <body>
@@ -386,7 +537,7 @@ table.dt tbody tr:hover td{background:var(--navy3);}
   <div class="mc">
     <div class="ph"><h1>REPORTS</h1><p>All completed shift reports.</p></div>
     <div class="card" style="margin-bottom:14px">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end" class="filter-grid">
         <div class="fg"><label class="fl">Checker</label><input type="text" id="rf-ch" class="fc" placeholder="Search..." oninput="filterRpts()"/></div>
         <div class="fg"><label class="fl">Car</label>
           <select id="rf-car" class="fc" onchange="filterRpts()">
