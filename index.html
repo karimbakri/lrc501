@@ -206,6 +206,15 @@ table.dt tbody tr:hover td{background:var(--navy3);}
 .mtt{font-size:17px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:9px;}
 .mf{display:flex;flex-direction:column;gap:13px;}
 .ma{display:flex;gap:9px;margin-top:20px;justify-content:flex-end;}
+/* OXYGEN BOTTLE SPECIAL */
+.o2-entry{display:flex;align-items:center;gap:6px;margin-top:6px;padding:8px 10px;background:var(--navy3);border:1px solid var(--bdr);border-radius:8px;}
+.o2-sel{background:var(--card);border:1px solid var(--bdr);color:var(--txt);padding:5px 8px;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;outline:none;cursor:pointer;width:60px;}
+.o2-sel:focus{border-color:var(--red);}
+.o2-num{background:var(--card);border:1px solid var(--bdr);color:var(--txt);padding:5px 8px;border-radius:6px;font-size:12px;font-family:inherit;outline:none;width:70px;text-align:center;}
+.o2-num:focus{border-color:var(--red);}
+.o2-lbl{font-size:11px;color:var(--gray);font-weight:600;}
+.o2-wrap{flex:1;min-width:0;}
+
 /* EMPTY */
 .empty{text-align:center;padding:50px 20px;}
 .ei{font-size:55px;margin-bottom:14px;opacity:.3;}
@@ -644,7 +653,18 @@ async function loadStats(){
   try{
     let q=SB.from('shift_checks').select('check_date',{count:'exact'});
     if(PROF.role==='paramedic')q=q.eq('checker_id',USER.id);
-    const[cr,mr]=await Promise.all([q,SB.from('check_items').select('id',{count:'exact',head:true}).eq('resolution','still_missing').eq('cleared',false)]);
+
+    // Missing items query - paramedics only see their own, admin/supervisor see all
+    let mq=SB.from('check_items').select('id',{count:'exact',head:true}).eq('resolution','still_missing').eq('cleared',false);
+    if(PROF.role==='paramedic'){
+      // Get only missing items from this paramedic's checks
+      const{data:myChecks}=await SB.from('shift_checks').select('id').eq('checker_id',USER.id);
+      const myIds=(myChecks||[]).map(c=>c.id);
+      if(myIds.length) mq=mq.in('shift_check_id',myIds);
+      else mq=mq.eq('shift_check_id','00000000-0000-0000-0000-000000000000'); // no results
+    }
+
+    const[cr,mr]=await Promise.all([q,mq]);
     const{data,count}=cr;
     const today=new Date().toISOString().split('T')[0];
     const se=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
@@ -717,6 +737,60 @@ async function startCheck(){
 }
 
 // ── CHECKLIST ──
+// O2 bottle items - special treatment
+const O2_NAMES = ['Oxygen Bottle (Full)', 'O2 Bottle'];
+function isO2(name){ return O2_NAMES.some(n => name && name.toLowerCase().includes(n.toLowerCase().replace('(full)',').trim()'))||
+  (name && (name.toLowerCase().includes('oxygen bottle') || (name.toLowerCase()==='o2 bottle'))); }
+
+function renderO2Entries(idx){
+  const item = CUR_ITEMS[idx];
+  if(!item.o2entries) item.o2entries = [{size:'',num:''}];
+  let h = '<div style="margin-top:8px">';
+  item.o2entries.forEach((e,ei)=>{
+    h += '<div class="o2-entry">'
+      +'<span class="o2-lbl">#'+(ei+1)+'</span>'
+      +'<select class="o2-sel" onchange="setO2Size('+idx+','+ei+',this.value)" title="Size">'
+      +'<option value="">Size</option>'
+      +'<option value="S"'+(e.size==='S'?' selected':'')+'>S</option>'
+      +'<option value="M"'+(e.size==='M'?' selected':'')+'>M</option>'
+      +'<option value="B"'+(e.size==='B'?' selected':'')+'>B</option>'
+      +'</select>'
+      +'<input type="number" class="o2-num" min="0" placeholder="Qty" value="'+(e.num||'')+'" '
+      +'onchange="setO2Num('+idx+','+ei+',this.value)" title="Quantity"/>'
+      +(item.o2entries.length>1?'<button onclick="removeO2Entry('+idx+','+ei+')" style="background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);color:#fca5a5;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px;flex-shrink:0">✕</button>':'')
+      +'</div>';
+  });
+  h += '<button onclick="addO2Entry('+idx+')" style="margin-top:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#86efac;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;font-weight:600;width:100%">+ Add Another Bottle</button>';
+  h += '</div>';
+  return h;
+}
+
+function setO2Size(idx,ei,val){ CUR_ITEMS[idx].o2entries[ei].size=val; updateO2Summary(idx); }
+function setO2Num(idx,ei,val){ CUR_ITEMS[idx].o2entries[ei].num=val; updateO2Summary(idx); }
+function addO2Entry(idx){
+  CUR_ITEMS[idx].o2entries.push({size:'',num:''});
+  document.getElementById('o2wrap-'+idx).innerHTML=renderO2Entries(idx);
+  updateO2Summary(idx);
+}
+function removeO2Entry(idx,ei){
+  CUR_ITEMS[idx].o2entries.splice(ei,1);
+  document.getElementById('o2wrap-'+idx).innerHTML=renderO2Entries(idx);
+  updateO2Summary(idx);
+}
+function updateO2Summary(idx){
+  const entries = CUR_ITEMS[idx].o2entries||[];
+  const total = entries.reduce((s,e)=>s+(parseInt(e.num)||0),0);
+  CUR_ITEMS[idx].found = total;
+  const miss = total < CUR_ITEMS[idx].required_quantity;
+  const qd = document.getElementById('qd-'+idx);
+  const ms = document.getElementById('ms-'+idx);
+  const mr = document.getElementById('mr-'+idx);
+  if(qd){ qd.textContent=total; qd.className='qd '+(miss?'u':'ok'); }
+  if(ms) ms.textContent = miss?'❌':'✅';
+  if(mr) mr.className = 'mr '+(CUR_ITEMS[idx].verified?'vf':miss?'miss':'ok');
+  updProg();
+}
+
 function renderChecklist(){
   const cats=[...new Set(CUR_ITEMS.map(i=>i.category))];
   let html='';
@@ -724,16 +798,26 @@ function renderChecklist(){
     html+='<div class="cats"><div class="catt">'+cat+'</div>';
     CUR_ITEMS.filter(i=>i.category===cat).forEach(item=>{
       const idx=CUR_ITEMS.indexOf(item),miss=item.found<item.required_quantity;
-      html+='<div class="mr '+(item.verified?'vf':miss?'miss':'ok')+'" id="mr-'+idx+'">'
+      const o2 = isO2(item.name_en);
+      html+='<div class="mr '+(item.verified?'vf':miss?'miss':'ok')+'" id="mr-'+idx+'" style="flex-wrap:wrap">'
         +'<div class="mn">'+item.name_en+'</div>'
-        +'<div class="mq"><div class="mql">Req</div><div class="mqv">'+item.required_quantity+'</div></div>'
-        +'<div class="qc"><button class="qb" onclick="chg('+idx+',-1)">−</button>'
-        +'<div class="qd '+(miss?'u':'ok')+'" id="qd-'+idx+'">'+item.found+'</div>'
-        +'<button class="qb" onclick="chg('+idx+',1)">+</button></div>'
-        +'<div class="ms" id="ms-'+idx+'">'+(miss?'❌':'✅')+'</div>'
-        +'<label class="mck"><input type="checkbox" id="ck-'+idx+'" '+(item.verified?'checked':'')+' onchange="verif('+idx+',this.checked)"/>'
-        +'<span id="cl-'+idx+'">'+(item.verified?'Done':'Check')+'</span></label>'
-        +'</div>';
+        +'<div class="mq"><div class="mql">Req</div><div class="mqv">'+item.required_quantity+'</div></div>';
+      if(o2){
+        // O2 bottle: show size+number entries instead of +/- counter
+        html+='<div class="qd '+(miss?'u':'ok')+'" id="qd-'+idx+'">'+item.found+'</div>'
+          +'<div class="ms" id="ms-'+idx+'">'+(miss?'❌':'✅')+'</div>'
+          +'<label class="mck"><input type="checkbox" id="ck-'+idx+'" '+(item.verified?'checked':'')+' onchange="verif('+idx+',this.checked)"/>'
+          +'<span id="cl-'+idx+'">'+(item.verified?'Done':'Check')+'</span></label>'
+          +'<div class="o2-wrap" style="width:100%;margin-top:4px" id="o2wrap-'+idx+'">'+renderO2Entries(idx)+'</div>';
+      } else {
+        html+='<div class="qc"><button class="qb" onclick="chg('+idx+',-1)">−</button>'
+          +'<div class="qd '+(miss?'u':'ok')+'" id="qd-'+idx+'">'+item.found+'</div>'
+          +'<button class="qb" onclick="chg('+idx+',1)">+</button></div>'
+          +'<div class="ms" id="ms-'+idx+'">'+(miss?'❌':'✅')+'</div>'
+          +'<label class="mck"><input type="checkbox" id="ck-'+idx+'" '+(item.verified?'checked':'')+' onchange="verif('+idx+',this.checked)"/>'
+          +'<span id="cl-'+idx+'">'+(item.verified?'Done':'Check')+'</span></label>';
+      }
+      html+='</div>';
     });
     html+='</div>';
   });
@@ -839,7 +923,15 @@ async function confirmStatus(){
 async function saveReport(){
   show();
   try{
-    const rows=CUR_ITEMS.map(item=>({material_id:item.id,material_name:item.name_en,required_quantity:item.required_quantity,found_quantity:item.found,resolved:item.resolved||false,resolution:item.resolution||null,miss_status:item.miss_status||null,cleared:false}));
+    const rows=CUR_ITEMS.map(item=>{
+      // For O2 bottles, build a detailed name with sizes/quantities
+      let name = item.name_en;
+      if(isO2(item.name_en) && item.o2entries && item.o2entries.length){
+        const details = item.o2entries.filter(e=>e.size||e.num).map(e=>(e.size||'?')+':'+(e.num||0)).join(', ');
+        if(details) name = item.name_en + ' [' + details + ']';
+      }
+      return {material_id:item.id,material_name:name,required_quantity:item.required_quantity,found_quantity:item.found,resolved:item.resolved||false,resolution:item.resolution||null,miss_status:item.miss_status||null,cleared:false};
+    });
     if(!navigator.onLine||CUR_CHECK.is_offline){
       const q=JSON.parse(localStorage.getItem('ems_oq')||'[]');
       q.push({check:{...CUR_CHECK,status:'completed'},items:rows,ts:new Date().toISOString()});
