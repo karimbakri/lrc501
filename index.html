@@ -603,9 +603,19 @@ async function signIn(){
   if(!email||!pass){showA('al-login','e','Enter email and password.');return;}
   show();
   try{
+    // Wait up to 3 seconds for supabase library to load
+    let waited=0;
+    while(!window.supabase && waited<30){
+      await new Promise(r=>setTimeout(r,100));
+      waited++;
+    }
+    if(!window.supabase){
+      hide();
+      showA('al-login','e','Could not connect. Please refresh the page and try again.');
+      return;
+    }
+    // Init SB client if not already done
     if(!SB){
-      // Initialize SB now if not ready
-      if(!window.supabase){hide();showA('al-login','e','App still loading. Please wait 2 seconds and try again.');return;}
       SB=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
       SB.auth.onAuthStateChange(async(ev,sess)=>{
         if(ev==='SIGNED_IN'&&sess){
@@ -616,8 +626,11 @@ async function signIn(){
     }
     const{error}=await SB.auth.signInWithPassword({email,password:pass});
     if(error){hide();showA('al-login','e',error.message);}
-    // success → onAuthStateChange fires
-  }catch(e){hide();showA('al-login','e','Connection error. Check your internet.');}
+    // success handled by onAuthStateChange
+  }catch(e){
+    hide();
+    showA('al-login','e','Connection error. Please check your internet and try again.');
+  }
 }
 
 async function signOut(){await SB.auth.signOut();}
