@@ -718,9 +718,11 @@ async function startCheck(){
 
 // ── CHECKLIST ──
 // O2 bottle items - special treatment
-const O2_NAMES = ['Oxygen Bottle (Full)', 'O2 Bottle'];
-function isO2(name){ return O2_NAMES.some(n => name && name.toLowerCase().includes(n.toLowerCase().replace('(full)',').trim()'))||
-  (name && (name.toLowerCase().includes('oxygen bottle') || (name.toLowerCase()==='o2 bottle'))); }
+function isO2(name){
+  if(!name) return false;
+  const n = name.toLowerCase();
+  return n.includes('oxygen bottle') || n === 'o2 bottle';
+}
 
 function renderO2Entries(idx){
   const item = CUR_ITEMS[idx];
