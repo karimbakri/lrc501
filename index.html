@@ -1025,7 +1025,7 @@ async function genReport(){
         +'<div id="si-bd-'+si+'"><span class="bd bd-a">Pending</span></div></div>'
         +'<div class="sbt">'
         +'<button class="sbn sb-d" id="sd-'+si+'" onclick="setSt('+si+',\'depot\')">🏭 Waiting for Depot</button>'
-        +'<button class="sbn sb-n" id="sn-'+si+'" onclick="setSt('+si+',\'na\')">➖ N/A</button>'
+        
         +'<button class="sbn sb-u" id="su-'+si+'" onclick="setSt('+si+',\'unavailable\')">🚫 Unavailable</button>'
         +'</div></div>';
     }).join('');
@@ -1041,8 +1041,8 @@ function setSt(si,st){
   const bds={depot:'<span class="bd bd-b">🏭 Depot</span>',na:'<span class="bd bd-gr">➖ N/A</span>',unavailable:'<span class="bd bd-r">🚫 Unavailable</span>'};
   document.getElementById('si-'+si).className='sit '+cls[st];
   document.getElementById('si-bd-'+si).innerHTML=bds[st];
-  ['d','n','u'].forEach(x=>{const b=document.getElementById('s'+x+'-'+si);if(b)b.classList.remove('on');});
-  const map={depot:'d',na:'n',unavailable:'u'};
+  ['d','u'].forEach(x=>{const b=document.getElementById('s'+x+'-'+si);if(b)b.classList.remove('on');});
+  const map={depot:'d',unavailable:'u'};
   const b=document.getElementById('s'+map[st]+'-'+si);if(b)b.classList.add('on');
 }
 
